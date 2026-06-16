@@ -1,0 +1,291 @@
+/* ─── TOKENS ─────────────────────────────────────── */
+:root {
+    --bg:          #060a10;
+    --bg-card:     #0c1220;
+    --bg-card-2:   #0f1728;
+    --border:      #1a2640;
+    --border-glow: #1e3a5f;
+
+    --green:       #00e676;
+    --green-dim:   #00a152;
+    --cyan:        #00e5ff;
+    --cyan-dim:    #0097a7;
+    --yellow:      #ffd600;
+    --red:         #ff1744;
+    --orange:      #ff6d00;
+    --purple:      #d500f9;
+
+    --text-primary:   #e8f4fd;
+    --text-secondary: #4a6fa5;
+    --text-dim:       #2a4060;
+
+    --font-mono:  'Share Tech Mono', monospace;
+    --font-ui:    'Barlow Condensed', sans-serif;
+
+    --radius: 4px;
+    --glow-green:  0 0 12px #00e67640, 0 0 30px #00e67618;
+    --glow-cyan:   0 0 12px #00e5ff40, 0 0 30px #00e5ff18;
+    --glow-red:    0 0 12px #ff174440, 0 0 30px #ff174418;
+    --glow-yellow: 0 0 12px #ffd60040, 0 0 30px #ffd60018;
+}
+
+/* ─── RESET + BASE ───────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { height: 100%; }
+
+body {
+    min-height: 100%;
+    background: var(--bg);
+    color: var(--text-primary);
+    font-family: var(--font-ui);
+    padding: 0;
+
+    /* subtle scan-line texture */
+    background-image:
+        repeating-linear-gradient(
+            0deg,
+            transparent,
+            transparent 2px,
+            rgba(0,230,118,0.015) 2px,
+            rgba(0,230,118,0.015) 4px
+        );
+}
+
+/* ─── HEADER ─────────────────────────────────────── */
+header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 28px;
+    border-bottom: 1px solid var(--border);
+    background: #08111d;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+header h1 {
+    font-family: var(--font-ui);
+    font-weight: 300;
+    font-size: 1.05rem;
+    letter-spacing: 0.35em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+}
+
+header h1 span {
+    color: var(--green);
+    font-weight: 600;
+}
+
+.header-left,
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 120px;
+}
+
+.header-right { justify-content: flex-end; }
+
+.header-label {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.12em;
+    color: var(--text-secondary);
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--green);
+    box-shadow: var(--glow-green);
+    animation: pulse-dot 2s ease-in-out infinite;
+}
+
+@keyframes pulse-dot {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.35; }
+}
+
+/* ─── VITALS GRID ────────────────────────────────── */
+.vitals-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 1px;
+    padding: 1px;
+    background: var(--border);
+    margin: 24px 24px 0;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+}
+
+/* ─── CARD ───────────────────────────────────────── */
+.card {
+    background: var(--bg-card);
+    padding: 16px 18px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    position: relative;
+    overflow: hidden;
+    transition: background 0.2s;
+}
+
+.card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 3px;
+    height: 100%;
+    background: var(--green-dim);
+    opacity: 0.6;
+}
+
+.card:hover { background: var(--bg-card-2); }
+
+.card-label {
+    font-family: var(--font-ui);
+    font-size: 0.62rem;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+}
+
+.card-value {
+    font-family: var(--font-mono);
+    font-size: 2.4rem;
+    line-height: 1;
+    color: var(--green);
+    text-shadow: var(--glow-green);
+    letter-spacing: -0.02em;
+    min-height: 2.4rem;
+    animation: value-in 0.4s ease both;
+}
+
+@keyframes value-in {
+    from { opacity: 0; transform: translateY(4px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.card-unit {
+    font-family: var(--font-ui);
+    font-size: 0.65rem;
+    font-weight: 300;
+    letter-spacing: 0.12em;
+    color: var(--text-dim);
+    text-transform: lowercase;
+}
+
+/* ─── CARD COLOR VARIANTS ────────────────────────── */
+
+/* Heart / critical — red-green */
+.card--critical::before { background: var(--red); }
+.card--critical .card-value {
+    color: var(--red);
+    text-shadow: var(--glow-red);
+    font-size: 2.8rem;
+}
+
+/* SpO2 — cyan */
+.card--spo2::before { background: var(--cyan); }
+.card--spo2 .card-value {
+    color: var(--cyan);
+    text-shadow: var(--glow-cyan);
+    font-size: 2.6rem;
+}
+
+/* BP group 1 — yellow */
+.card--bp::before { background: var(--yellow); }
+.card--bp .card-value {
+    color: var(--yellow);
+    text-shadow: var(--glow-yellow);
+}
+
+/* Temp — orange */
+.card--temp::before { background: var(--orange); }
+.card--temp .card-value {
+    color: var(--orange);
+    text-shadow: 0 0 12px #ff6d0040, 0 0 30px #ff6d0018;
+}
+
+/* BP 2 group — muted yellow */
+.card--bp2::before { background: #a08000; }
+.card--bp2 .card-value {
+    color: #ccaa00;
+    text-shadow: 0 0 12px #ccaa0030;
+}
+
+/* CO2 — purple */
+.card--co2::before { background: var(--purple); }
+.card--co2 .card-value {
+    color: var(--purple);
+    text-shadow: 0 0 12px #d500f940, 0 0 30px #d500f918;
+}
+
+/* ─── ECG SECTION ────────────────────────────────── */
+.chart-section {
+    margin: 24px 24px;        /* matches vitals-grid margin */
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    background: var(--bg-card);
+}
+
+.chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 18px;
+    border-bottom: 1px solid var(--border);
+    background: #08111d;
+}
+
+.chart-title {
+    font-family: var(--font-ui);
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--green);
+}
+
+.chart-speed {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    color: var(--text-dim);
+    letter-spacing: 0.1em;
+}
+
+.chart-container {
+    padding: 6px 8px;
+    height: 220px;            /* ← was 90px */
+    position: relative;
+
+    /* ECG graph-paper grid */
+    background-image:
+        linear-gradient(rgba(0,230,118,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,230,118,0.04) 1px, transparent 1px),
+        linear-gradient(rgba(0,230,118,0.015) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,230,118,0.015) 1px, transparent 1px);
+    background-size: 50px 50px, 50px 50px, 10px 10px, 10px 10px;
+}
+
+/* ─── SCROLLBAR ──────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border-glow); border-radius: 3px; }
+
+/* ─── RESPONSIVE ─────────────────────────────────── */
+@media (max-width: 600px) {
+    header h1 { font-size: 0.85rem; }
+    .vitals-grid { margin: 12px 12px 0; }
+    .chart-section { margin: 12px; }
+    .card-value { font-size: 1.9rem; }
+    .card--critical .card-value { font-size: 2.1rem; }
+    .card--spo2 .card-value { font-size: 2rem; }
+}

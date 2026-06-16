@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Patient Monitor</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow+Condensed:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/smoothie@1.36.1/smoothie.min.js"></script>
+</head>
+<body>
+
+    <header>
+        <div class="header-left">
+            <div class="status-dot"></div>
+            <span class="header-label">LIVE</span>
+        </div>
+        <h1>PATIENT <span>MONITOR</span></h1>
+        <div class="header-right">
+            <span class="header-label" id="clock">--:--:--</span>
+        </div>
+    </header>
+
+    <div class="vitals-grid">
+
+        <div class="card card--critical">
+            <div class="card-label">HEART BEAT</div>
+            <p class="card-value" id="8867-4">--</p>
+            <div class="card-unit">bpm</div>
+        </div>
+
+        <div class="card card--spo2">
+            <div class="card-label">SpO₂</div>
+            <p class="card-value" id="2710-2">--</p>
+            <div class="card-unit">%</div>
+        </div>
+
+        <div class="card">
+            <div class="card-label">PULSE RATE</div>
+            <p class="card-value" id="8889-8">--</p>
+            <div class="card-unit">bpm</div>
+        </div>
+
+        <div class="card">
+            <div class="card-label">RESP RATE</div>
+            <p class="card-value" id="18686-6">--</p>
+            <div class="card-unit">br/min</div>
+        </div>
+
+        <div class="card card--bp">
+            <div class="card-label">SYSTOLIC BP</div>
+            <p class="card-value" id="8480-6">--</p>
+            <div class="card-unit">mmHg</div>
+        </div>
+
+        <div class="card card--bp">
+            <div class="card-label">DIASTOLIC BP</div>
+            <p class="card-value" id="8462-4">--</p>
+            <div class="card-unit">mmHg</div>
+        </div>
+
+        <div class="card card--bp">
+            <div class="card-label">MEAN BP</div>
+            <p class="card-value" id="8478-0">--</p>
+            <div class="card-unit">mmHg</div>
+        </div>
+
+        <div class="card card--temp">
+            <div class="card-label">BODY TEMP T1</div>
+            <p class="card-value" id="61008-9">--</p>
+            <div class="card-unit">°C</div>
+        </div>
+
+        <div class="card card--bp2">
+            <div class="card-label">SYSTOLIC BP 2</div>
+            <p class="card-value" id="76215-3">--</p>
+            <div class="card-unit">mmHg</div>
+        </div>
+
+        <div class="card card--bp2">
+            <div class="card-label">DIASTOLIC BP 2</div>
+            <p class="card-value" id="76213-8">--</p>
+            <div class="card-unit">mmHg</div>
+        </div>
+
+        <div class="card card--bp2">
+            <div class="card-label">MEAN BP 2</div>
+            <p class="card-value" id="76214-6">--</p>
+            <div class="card-unit">mmHg</div>
+        </div>
+
+    </div>
+
+    <div class="chart-section">
+        <div class="chart-header">
+            <span class="chart-title">ECG</span>
+            
+        </div>
+        <div class="chart-container">
+            <canvas id="ecgCanvas" width="800" height="200"></canvas>
+        </div>
+    </div>
+
+    <script>
+        // Live clock
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('clock').textContent =
+                now.toTimeString().slice(0, 8);
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+    </script>
+    <script src="/static/app.js"></script>
+
+</body>
+</html>
