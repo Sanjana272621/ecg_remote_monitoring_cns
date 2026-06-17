@@ -10,70 +10,100 @@ conn = psycopg2.connect(CONNECTION_STRING)
 cur = conn.cursor()
 
 cur.execute("""
-CREATE TABLE PATIENT(
-    PID INT PRIMARY KEY,
-    PNAME VARCHAR(50)
-)
-""")
+CREATE TABLE IF NOT EXISTS ECG (
+    ID SERIAL PRIMARY KEY,
+    RECORDED_AT TIMESTAMP NOT NULL,
 
-
-cur.execute("""
-CREATE TABLE MEASUREMENT_DEFINITIONS(
-    CODE VARCHAR(30) PRIMARY KEY,
-    NAME VARCHAR(100) NOT NULL,
-    UNIT VARCHAR(30)
+    LEAD_STATUS INTEGER,
+    HRV INTEGER,
+    ARR_TYPE INTEGER
 )
 """)
 
 cur.execute("""
-CREATE TABLE VITALS(
-    VID SERIAL PRIMARY KEY,
-    PID INT,
-    CODE VARCHAR(30) NOT NULL,
-    VALUE FLOAT,
-    RECORDED_AT TIMESTAMP,
+CREATE TABLE IF NOT EXISTS ECG_WAVEFORM (
+    WAVE_ID SERIAL PRIMARY KEY,
+    ECG_ID INTEGER NOT NULL,
 
-    FOREIGN KEY (PID)
-        REFERENCES PATIENT(PID),
+    WAVE1 INTEGER[],
+    WAVE2 INTEGER[],
+    WAVEV INTEGER[],
 
-    FOREIGN KEY (CODE)
-        REFERENCES MEASUREMENT_DEFINITIONS(CODE)
+    FOREIGN KEY (ECG_ID)
+        REFERENCES ECG(ID)
+        ON DELETE CASCADE
 )
 """)
 
 cur.execute("""
-CREATE TABLE BATCHED_WAVEFORMS(
-    WID SERIAL PRIMARY KEY,
-    PID INT,
+CREATE TABLE IF NOT EXISTS RESP (
+    ID SERIAL PRIMARY KEY,
+    RECORDED_AT TIMESTAMP NOT NULL,
+
+    RESP_RATE INTEGER
+)
+""")
+
+cur.execute("""
+CREATE TABLE IF NOT EXISTS RESP_WAVEFORM (
+    WAVE_ID SERIAL PRIMARY KEY,
+    RESP_ID INTEGER NOT NULL,
+
     WAVEFORM INTEGER[],
-    RECORDED_AT TIMESTAMP,
-    
-    FOREIGN KEY (PID)
-        REFERENCES PATIENT (PID)
-        
+
+    FOREIGN KEY (RESP_ID)
+        REFERENCES RESP(ID)
+        ON DELETE CASCADE
 )
 """)
 
-#Inserting measurement definitions
-#No CO2 Parameter
 cur.execute("""
-INSERT INTO MEASUREMENT_DEFINITIONS VALUES
-('8867-4', 'HEART BEAT', 'bpm'),
-('2710-2', 'OXYGEN SATURATION', '%'),
-('8889-8', 'Pulse rate', 'bpm'),
-('18686-6', 'Respiration rate', 'BrPM'),
-('8480-6', 'Systolic blood pressure', 'mmHg'),
-('8462-4', 'Diastolic blood pressure', 'mmHg'),
-('8478-0', 'Mean blood pressure', 'mmHg'),
-('61008-9', 'Body temperature', 'C'),
-('76215-3', 'Systolic blood pressure', 'mmHg'),
-('76213-8', 'Diastolic blood pressure', 'mmHg'),
-('76214-6', 'Mean blood pressure', 'mmHg')
+CREATE TABLE IF NOT EXISTS SPO2 (
+    ID SERIAL PRIMARY KEY,
+    RECORDED_AT TIMESTAMP NOT NULL,
+
+    SPO2_VALUE INTEGER,
+    PULSE_RATE INTEGER,
+    ERROR_MSG INTEGER
+)
+""")
+
+cur.execute("""
+CREATE TABLE IF NOT EXISTS SPO2_WAVEFORM (
+    WAVE_ID SERIAL PRIMARY KEY,
+    SPO2_ID INTEGER NOT NULL,
+
+    WAVEFORM INTEGER[],
+
+    FOREIGN KEY (SPO2_ID)
+        REFERENCES SPO2(ID)
+        ON DELETE CASCADE
+)
+""")
+
+cur.execute("""
+CREATE TABLE IF NOT EXISTS TEMP (
+    ID SERIAL PRIMARY KEY,
+    RECORDED_AT TIMESTAMP NOT NULL,
+
+    LEAD_STATUS INTEGER,
+    TEMP1 FLOAT,
+    TEMP2 FLOAT
+)
+""")
+
+cur.execute("""
+CREATE TABLE IF NOT EXISTS NIBP (
+    ID SERIAL PRIMARY KEY,
+    RECORDED_AT TIMESTAMP NOT NULL,
+
+    SYS INTEGER,
+    MAP INTEGER,
+    DIA INTEGER,
+    ERROR_MSG INTEGER
+)
 """)
 
 conn.commit()
 cur.close()
 conn.close()
-
-
-

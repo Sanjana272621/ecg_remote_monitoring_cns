@@ -42,7 +42,6 @@ for message in get_packet():
     #print("MESSAGE: ", message, type(message))
 
     (rc, mid) = client.publish("temptest/temperature", json.dumps(asdict(message)), qos = 1)
-    time.sleep(10/7)
 
         #client.publish("temptest/temperature", "END OF STREAMING", qos =1)
 

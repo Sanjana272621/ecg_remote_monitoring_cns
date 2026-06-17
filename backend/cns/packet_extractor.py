@@ -18,7 +18,7 @@ end_byte = b'\xaa'
 def packet_extractor(client_socket, buffer):
     with client_socket:
         while True:
-            data = client_socket.recv(500)
+            data = client_socket.recv(4096)
             buffer.extend(data)
 
             if not data:
@@ -49,13 +49,10 @@ def packet_extractor(client_socket, buffer):
                     with open("cns_capture.txt", "a") as file:
                         match module_id:
                             case ModuleID.ECG:
-                                print("ECG PACKET RECIEVED")
                                 ecg_data = ecg_parser(bin_packet, dec_packet_length)
                                 file.write(f"{ecg_data}\n")
                                 yield(ecg_data)
-                        
                             case ModuleID.RESP:
-                                print("RESP PACKET RECIEVED")
                                 resp_data = resp_parser(bin_packet, dec_packet_length)
                                 file.write(f"{resp_data}\n")
                                 yield(resp_data)
@@ -71,13 +68,21 @@ def packet_extractor(client_socket, buffer):
                                 temp_data = temp_parser(bin_packet, dec_packet_length)
                                 file.write(f"{temp_data}\n")                     
                                 yield(temp_data)
+                            case ModuleID.PATIENT:
+                                print("PATIENT DATA")
+                                file.write("THIS IS PATIENT DATA!")
+                                file.write(str(bin_packet.hex()))
 
+                    with open("module_log.txt", "a") as f:
+                        f.write(f"{module_id}\n")
                     print("Opening log file!")
                     with open(LOG_FILE, "ab") as file:
                         #file.write("NEW MESSAGE! LENGTH = " + str(len(data)) + "\n")
-                        file.write(bin_packet) 
-                        file.write(b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00')
-                    
+                        if module_id == ModuleID.PATIENT:
+                            file.write(bin_packet) 
+                            file.write(b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00')
+                        
+
                     with open("cns_verify.txt", "a") as file:
                         hex_data = str(bin_packet.hex())
 

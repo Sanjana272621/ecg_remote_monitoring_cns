@@ -1,0 +1,15 @@
+from dataclasses import dataclass 
+from typing import List, ClassVar
+
+@dataclass
+class BasePacket:
+    start_byte: ClassVar[int] = 85 #0x55
+    end_byte: ClassVar[int] = 170 #0xaa
+    checksum: ClassVar[int] = 90 
+
+class Patient(BasePacket):
+    module_id: int 
+    module_name: str 
+    gender: int 
+    first_name: int 
+    pid: int

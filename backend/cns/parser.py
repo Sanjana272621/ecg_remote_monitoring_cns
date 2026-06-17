@@ -24,8 +24,6 @@ def ecg_parser(bin_packet, dec_packet_length):
 
     for i in range(28, 28+int(waveforms_length/3), 4):
         dec_sample = to_big_endian_int(bin_packet[i: i+4])
-        with open("in_parser_log.bin", "ab") as file:
-            file.write(bin_packet[i: i+4]) 
         wave1.append(dec_sample)
     
     for i in range(28+int(waveforms_length/3), 28+2*int(waveforms_length/3), 4):
