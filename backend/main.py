@@ -2,7 +2,6 @@ import paho.mqtt.client as mqtt
 import paho.mqtt.publish as publish
 import ssl 
 from dotenv import load_dotenv
-from backend.hl7_files.hl7_parser import parse_hl7_message
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
@@ -14,7 +13,6 @@ import os
 import json
 
 load_dotenv()
-
 
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="../frontend/static"), name="static")
@@ -35,8 +33,8 @@ def on_message(client, userdata, msg):
         file.write(str(data))
         file.write(str(type(data)))
 
-    #parsed = parse_hl7_message(raw)
-
+    telemetry_service.realtime_storage(data)
+    telemetry_service.persistent_storage(data)
     #telemetry_service.realtime_storage(parsed)
     #telemetry_service.persistent_storage(parsed)
     #telemetry_service.view_buffers()
@@ -59,25 +57,32 @@ client.subscribe("temptest/temperature", qos=1)
 client.loop_start()
 
 #FastAPI Routes
-@app.get("/", response_class=HTMLResponse)
-async def home(request: Request):
+@app.get("/ecg_vitals")
+def get_ecg_vitals_route():
+    return telemetry_service.get_ecg_vitals()
 
-    return templates.TemplateResponse(
-        request=request,
-        name="index.html",
-        context={"request": request}
-    )
+@app.get("/resp_vitals")
+def get_resp_vitals_route():
+    return telemetry_service.get_resp_vitals()
 
+@app.get("/spo2_vitals")
+def get_spo2_vitals_route():
+    return telemetry_service.get_spo2_vitals()
 
-@app.get("/vitals")
-def get_vitals_route():
-    return telemetry_service.get_vitals()
+@app.get("/temp_vitals")
+def get_temp_vitals_route():
+    return telemetry_service.get_temp_vitals()
+
+@app.get("/nibp_vitals")
+def get_nibp_vitals_route():
+    return telemetry_service.get_nibp_vitals()
+
 
 @app.websocket("/waveform")
 async def waveform_socket(ws: WebSocket):
     await ws.accept()
+
     while True:
-        data = telemetry_service.get_latest_waveform()
+        data = telemetry_service.get_latest_ecgI_waveform()
         await ws.send_json(data)
-        #telemetry_service.view_buffers()
-        await asyncio.sleep(3/25) #Updates every 3/25 seconds, sends 5 samples
+        await asyncio.sleep(0.001)

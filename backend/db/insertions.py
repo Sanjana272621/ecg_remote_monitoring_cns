@@ -3,7 +3,7 @@ from db.connection import get_connection
 conn = get_connection()
 cur = conn.cursor()
 
-def insert_ecg(ecg, timestamp):
+def insert_ecg(ecg):
     cur = conn.cursor()
 
     cur.execute("""
@@ -14,7 +14,7 @@ def insert_ecg(ecg, timestamp):
         ARR_TYPE
     )
     VALUES(
-        TO_TIMESTAMP(%s, 'YYYYMMDDHH24MISS'),
+        %s,
         %s,
         %s,
         %s
@@ -22,10 +22,10 @@ def insert_ecg(ecg, timestamp):
     RETURNING ID
     """,
     (
-        timestamp,
-        ecg.lead_status,
-        ecg.hrv,
-        ecg.arr_type
+        ecg['timestamp'],
+        ecg['lead_status'],
+        ecg['hrv'],
+        ecg['arr_type']
     ))
 
     ecg_id = cur.fetchone()[0]
@@ -33,23 +33,25 @@ def insert_ecg(ecg, timestamp):
     cur.execute("""
     INSERT INTO ECG_WAVEFORM(
         ECG_ID,
+        RECORDED_AT,
         WAVE1,
         WAVE2,
         WAVEV
     )
-    VALUES(%s, %s, %s, %s)
+    VALUES(%s, %s, %s, %s, %s)
     """,
     (
         ecg_id,
-        ecg.wave1,
-        ecg.wave2,
-        ecg.waveV
+        ecg['timestamp'],
+        ecg['wave1'],
+        ecg['wave2'],
+        ecg['waveV']
     ))
 
     conn.commit()
     cur.close()
 
-def insert_resp(resp, timestamp):
+def insert_resp(resp):
     cur = conn.cursor()
 
     cur.execute("""
@@ -57,15 +59,13 @@ def insert_resp(resp, timestamp):
         RECORDED_AT,
         RESP_RATE
     )
-    VALUES(
-        TO_TIMESTAMP(%s, 'YYYYMMDDHH24MISS'),
-        %s
-    )
+    VALUES(%s, %s)
+                
     RETURNING ID
     """,
     (
-        timestamp,
-        resp.resp_rate
+        resp['timestamp'],
+        resp['resp_rate']
     ))
 
     resp_id = cur.fetchone()[0]
@@ -73,19 +73,21 @@ def insert_resp(resp, timestamp):
     cur.execute("""
     INSERT INTO RESP_WAVEFORM(
         RESP_ID,
+        RECORDED_AT,
         WAVEFORM
     )
-    VALUES(%s, %s)
+    VALUES(%s, %s, %s)
     """,
     (
         resp_id,
-        resp.wave
+        resp['timestamp'],
+        resp['wave']
     ))
 
     conn.commit()
     cur.close()
 
-def insert_spo2(spo2, timestamp):
+def insert_spo2(spo2):
     cur = conn.cursor()
 
     cur.execute("""
@@ -95,19 +97,15 @@ def insert_spo2(spo2, timestamp):
         PULSE_RATE,
         ERROR_MSG
     )
-    VALUES(
-        TO_TIMESTAMP(%s, 'YYYYMMDDHH24MISS'),
-        %s,
-        %s,
-        %s
-    )
+    VALUES(%s, %s, %s, %s)
+                
     RETURNING ID
     """,
     (
-        timestamp,
-        spo2.spo2_val,
-        spo2.pr,
-        spo2.error_msg
+        spo2['timestamp'],
+        spo2['spo2_val'],
+        spo2['pr'],
+        spo2['error_msg']
     ))
 
     spo2_id = cur.fetchone()[0]
@@ -115,19 +113,21 @@ def insert_spo2(spo2, timestamp):
     cur.execute("""
     INSERT INTO SPO2_WAVEFORM(
         SPO2_ID,
+        RECORDED_AT,
         WAVEFORM
     )
-    VALUES(%s, %s)
+    VALUES(%s, %s, %s)
     """,
     (
         spo2_id,
-        spo2.wave
+        spo2['timestamp'],
+        spo2['wave']
     ))
 
     conn.commit()
     cur.close()
 
-def insert_temp(temp, timestamp):
+def insert_temp(temp):
     cur = conn.cursor()
 
     cur.execute("""
@@ -137,24 +137,19 @@ def insert_temp(temp, timestamp):
         TEMP1,
         TEMP2
     )
-    VALUES(
-        TO_TIMESTAMP(%s, 'YYYYMMDDHH24MISS'),
-        %s,
-        %s,
-        %s
-    )
+    VALUES%s, %s, %s, %s)
     """,
     (
-        timestamp,
-        temp.lead_status,
-        temp.temp1,
-        temp.temp2
+        temp['timestamp'],
+        temp['lead_status'],
+        temp['temp1'],
+        temp['temp2']
     ))
 
     conn.commit()
     cur.close()
 
-def insert_nibp(nibp, timestamp):
+def insert_nibp(nibp):
     cur = conn.cursor()
 
     cur.execute("""
@@ -165,20 +160,14 @@ def insert_nibp(nibp, timestamp):
         DIA,
         ERROR_MSG
     )
-    VALUES(
-        TO_TIMESTAMP(%s, 'YYYYMMDDHH24MISS'),
-        %s,
-        %s,
-        %s,
-        %s
-    )
+    VALUES(%s, %s, %s, %s)
     """,
     (
-        timestamp,
-        nibp.sys,
-        nibp.map,
-        nibp.dia,
-        nibp.error_msg
+        nibp['timestamp'],
+        nibp['sys'],
+        nibp['map'],
+        nibp['dia'],
+        nibp['error_msg']
     ))
 
     conn.commit()

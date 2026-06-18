@@ -1,67 +1,126 @@
 //Vitals
 async function fetchVitals() {
 
-    const response = await fetch("/vitals");
+    try {
 
-    const data = await response.json();
+        const [
+            ecgResponse,
+            respResponse,
+            spo2Response,
+            tempResponse,
+            nibpResponse
+        ] = await Promise.all([
+            fetch("/ecg_vitals"),
+            fetch("/resp_vitals"),
+            fetch("/spo2_vitals"),
+            fetch("/temp_vitals"),
+            fetch("/nibp_vitals")
+        ]);
 
-    // update all cards dynamically
-    Object.keys(data).forEach(code => {
+        const ecg = await ecgResponse.json();
+        const resp = await respResponse.json();
+        const spo2 = await spo2Response.json();
+        const temp = await tempResponse.json();
+        const nibp = await nibpResponse.json();
 
-        const element = document.getElementById(code);
+        if (ecg.hrv !== undefined)
+            document.getElementById("hrv").innerText = ecg.hrv;
 
-        if (element) {
+        if (resp.resp_rate !== undefined)
+            document.getElementById("resp_rate").innerText = resp.resp_rate;
 
-            element.innerText =
-                `${data[code].value} ${data[code].unit}`;
-        }
-    });
+        if (spo2.spo2_val !== undefined)
+            document.getElementById("spo2_val").innerText = spo2.spo2_val;
+
+        if (spo2.pr !== undefined)
+            document.getElementById("pr").innerText = spo2.pr;
+
+        if (temp.temp1 !== undefined)
+            document.getElementById("temp1").innerText = temp.temp1;
+
+        if (temp.temp2 !== undefined)
+            document.getElementById("temp2").innerText = temp.temp2;
+
+        if (nibp.sys !== undefined)
+            document.getElementById("sys").innerText = nibp.sys;
+
+        if (nibp.dia !== undefined)
+            document.getElementById("dia").innerText = nibp.dia;
+
+        if (nibp.map !== undefined)
+            document.getElementById("map").innerText = nibp.map;
+
+    } catch (err) {
+        console.error("Vitals fetch failed:", err);
+    }
 }
 
-setInterval(fetchVitals, 2000);
+setInterval(fetchVitals, 1000);
+fetchVitals();
 
-
-//Websocket
+// WebSocket ECG waveform
 document.addEventListener("DOMContentLoaded", () => {
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const socket = new WebSocket(`${protocol}//${window.location.host}/waveform`);
+
+    const protocol =
+        window.location.protocol === "https:"
+            ? "wss:"
+            : "ws:";
+
+    const socket =
+        new WebSocket(
+            `${protocol}//${window.location.host}/waveform`
+        );
 
     const line = new TimeSeries();
+
     const chart = new SmoothieChart({
         millisPerPixel: 16,
-        interpolation: 'linear',
-        minValue: -2000, //earlier -200
-        maxValue: 2000, //earlier 900
+        interpolation: "linear",
+
+        minValue: -2000,
+        maxValue: 2000,
+
         grid: {
-            strokeStyle: 'rgba(0,255,0,0.1)',
-            fillStyle: '#000000',
+            strokeStyle: "rgba(0,255,0,0.1)",
+            fillStyle: "#000000",
             verticalSections: 4
         }
     });
 
-    const ecgCanvas = document.getElementById("ecgCanvas");
-    ecgCanvas.width  = ecgCanvas.offsetWidth  || ecgCanvas.parentElement.clientWidth;
-    ecgCanvas.height = ecgCanvas.offsetHeight || 148;
+    const ecgCanvas =
+        document.getElementById("ecgCanvas");
+
+    ecgCanvas.width =
+        ecgCanvas.offsetWidth ||
+        ecgCanvas.parentElement.clientWidth;
+
+    ecgCanvas.height =
+        ecgCanvas.offsetHeight ||
+        148;
 
     chart.addTimeSeries(line, {
-        strokeStyle: '#00ff66',
+        strokeStyle: "#00ff66",
         lineWidth: 1,
-        fillStyle: 'rgba(0, 0, 0, 0)'
+        fillStyle: "rgba(0,0,0,0)"
     });
 
     chart.streamTo(ecgCanvas, 50);
 
-    let baseClientTime = Date.now();
-    let baseServerTime = 0;
-    let sampleCount = 0;
     let nextTimestamp = Date.now();
+    let sampleCount = 0;
 
     socket.onmessage = (event) => {
+
         try {
-            const samples = JSON.parse(event.data);
-            
+
+            const samples =
+                JSON.parse(event.data);
+
             if (!Array.isArray(samples)) {
-                console.warn('Expected array of samples, got:', typeof samples);
+                console.warn(
+                    "[ECG] Expected array, got:",
+                    typeof samples
+                );
                 return;
             }
 
@@ -69,49 +128,172 @@ document.addEventListener("DOMContentLoaded", () => {
                 return;
             }
 
-            if (Array.isArray(samples[0])) {
-                if (baseServerTime === 0) {
-                    baseServerTime = samples[0][0];
-                    console.log(`[ECG] Initialized: server_base=${baseServerTime}, client_base=${baseClientTime}`);
+            const sampleInterval = 24;
+
+            samples.forEach((value) => {
+
+                const num = Number(value);
+
+                if (!Number.isNaN(num)) {
+
+                    line.append(
+                        nextTimestamp,
+                        num
+                    );
+
+                    nextTimestamp += sampleInterval;
+                    sampleCount++;
                 }
+            });
 
-                samples.forEach((sample) => {
-                    if (Array.isArray(sample) && sample.length === 2) {
-                        const [serverTime, value] = sample;
-                        const num = Number(value);
-
-                        if (!Number.isNaN(num)) {
-                            const clientTime = baseClientTime + (serverTime - baseServerTime);
-                            line.append(clientTime, num);
-                            sampleCount++;
-                        }
-                    }
-                });
-            } else {
-                //let sampleTime = Date.now();
-                const sampleInterval = 24; // ms between raw samples for a smoother line shape
-                                        // (2500 ecg samples / 1 minute)
-
-                samples.forEach((value) => {
-                    const num = Number(value);
-
-                    if (!Number.isNaN(num)) {
-                        line.append(nextTimestamp, num);
-                        nextTimestamp += sampleInterval;
-                        sampleCount++;
-                    }
-                });
-            }
-            
             if (sampleCount % 500 === 0) {
-                console.log(`[ECG] Appended ${sampleCount} samples total`);
+                console.log(
+                    `[ECG] Appended ${sampleCount} samples`
+                );
             }
+
         } catch (err) {
-            console.error('[ECG Parse Error]', err);
+
+            console.error(
+                "[ECG Parse Error]",
+                err
+            );
         }
     };
 
-    socket.onopen = () => console.log("[ECG] WebSocket connected to /waveform");
-    socket.onclose = () => console.warn("[ECG] WebSocket closed");
-    socket.onerror = (err) => console.error("[ECG] WebSocket error:", err);
+    socket.onopen = () => {
+        console.log(
+            "[ECG] WebSocket connected"
+        );
+    };
+
+    socket.onclose = () => {
+        console.warn(
+            "[ECG] WebSocket closed"
+        );
+    };
+
+    socket.onerror = (err) => {
+        console.error(
+            "[ECG] WebSocket error",
+            err
+        );
+    };
 });
+
+// async function fetchVitals() {
+
+//     const response = await fetch("/vitals");
+
+//     const data = await response.json();
+
+//     // update all cards dynamically
+//     Object.keys(data).forEach(code => {
+
+//         const element = document.getElementById(code);
+
+//         if (element) {
+
+//             element.innerText =
+//                 `${data[code].value} ${data[code].unit}`;
+//         }
+//     });
+// }
+
+// setInterval(fetchVitals, 2000);
+
+
+// //Websocket
+// document.addEventListener("DOMContentLoaded", () => {
+//     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+//     const socket = new WebSocket(`${protocol}//${window.location.host}/waveform`);
+
+//     const line = new TimeSeries();
+//     const chart = new SmoothieChart({
+//         millisPerPixel: 16,
+//         interpolation: 'linear',
+//         minValue: -2000, //earlier -200
+//         maxValue: 2000, //earlier 900
+//         grid: {
+//             strokeStyle: 'rgba(0,255,0,0.1)',
+//             fillStyle: '#000000',
+//             verticalSections: 4
+//         }
+//     });
+
+//     const ecgCanvas = document.getElementById("ecgCanvas");
+//     ecgCanvas.width  = ecgCanvas.offsetWidth  || ecgCanvas.parentElement.clientWidth;
+//     ecgCanvas.height = ecgCanvas.offsetHeight || 148;
+
+//     chart.addTimeSeries(line, {
+//         strokeStyle: '#00ff66',
+//         lineWidth: 1,
+//         fillStyle: 'rgba(0, 0, 0, 0)'
+//     });
+
+//     chart.streamTo(ecgCanvas, 50);
+
+//     let baseClientTime = Date.now();
+//     let baseServerTime = 0;
+//     let sampleCount = 0;
+//     let nextTimestamp = Date.now();
+
+//     socket.onmessage = (event) => {
+//         try {
+//             const samples = JSON.parse(event.data);
+            
+//             if (!Array.isArray(samples)) {
+//                 console.warn('Expected array of samples, got:', typeof samples);
+//                 return;
+//             }
+
+//             if (samples.length === 0) {
+//                 return;
+//             }
+
+//             if (Array.isArray(samples[0])) {
+//                 if (baseServerTime === 0) {
+//                     baseServerTime = samples[0][0];
+//                     console.log(`[ECG] Initialized: server_base=${baseServerTime}, client_base=${baseClientTime}`);
+//                 }
+
+//                 samples.forEach((sample) => {
+//                     if (Array.isArray(sample) && sample.length === 2) {
+//                         const [serverTime, value] = sample;
+//                         const num = Number(value);
+
+//                         if (!Number.isNaN(num)) {
+//                             const clientTime = baseClientTime + (serverTime - baseServerTime);
+//                             line.append(clientTime, num);
+//                             sampleCount++;
+//                         }
+//                     }
+//                 });
+//             } else {
+//                 //let sampleTime = Date.now();
+//                 const sampleInterval = 24; // ms between raw samples for a smoother line shape
+//                                         // (2500 ecg samples / 1 minute)
+
+//                 samples.forEach((value) => {
+//                     const num = Number(value);
+
+//                     if (!Number.isNaN(num)) {
+//                         line.append(nextTimestamp, num);
+//                         nextTimestamp += sampleInterval;
+//                         sampleCount++;
+//                     }
+//                 });
+//             }
+            
+//             if (sampleCount % 500 === 0) {
+//                 console.log(`[ECG] Appended ${sampleCount} samples total`);
+//             }
+//         } catch (err) {
+//             console.error('[ECG Parse Error]', err);
+//         }
+//     };
+
+//     socket.onopen = () => console.log("[ECG] WebSocket connected to /waveform");
+//     socket.onclose = () => console.warn("[ECG] WebSocket closed");
+//     socket.onerror = (err) => console.error("[ECG] WebSocket error:", err);
+// });
