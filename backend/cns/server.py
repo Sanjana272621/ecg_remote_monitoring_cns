@@ -15,6 +15,7 @@ def get_packet(host='192.168.1.39', port=2000):
     open("cns_capture.bin", "wb").close()
     open("cns_capture.txt", "w").close()
     open("cns_verify.txt", "w").close()
+    open("module_log.txt", "w").close()
 
     try:
         while True:

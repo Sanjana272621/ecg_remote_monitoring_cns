@@ -1,6 +1,7 @@
 #when overwrite, read pointer increments
-#=> skip data that is overwritten
-
+#when data comes close to being overwritten => leads are removed
+# need to force plot 0
+ 
 class CircularBuffer:
     def __init__(self, size):
         self.size = size
@@ -11,7 +12,7 @@ class CircularBuffer:
 
         self.count = 0
 
-    def enqueue(self, batch):
+    def update(self, batch):
 
         for item in batch:
             self.data[self.write] = item
@@ -23,13 +24,13 @@ class CircularBuffer:
             else:
                 self.read = (self.read +1)%self.size
 
-    def get_latest(self):
+    def get_latest(self, sample_count):
         if self.count == 0:
             return []
 
         latest = []
 
-        for _ in range(min(5, self.count)): #Sends 5 sampels each update
+        for _ in range(min(sample_count, self.count)): #Sends 5 sampels each update
             self.read = (self.read + 1) % self.size
             latest.append(self.data[self.read])
 
@@ -37,14 +38,14 @@ class CircularBuffer:
 
         return latest
 
-    def get_window(self):
+    def get_window(self, sample_count):
         if self.count == 0:
             return []
 
         latest = []
         temp = self.read 
 
-        for _ in range(min(10, self.count)):
+        for _ in range(min(sample_count, self.count)):
             temp = (temp + 1) % self.size
             latest.append(self.data[temp])
 

@@ -137,7 +137,7 @@ def insert_temp(temp):
         TEMP1,
         TEMP2
     )
-    VALUES%s, %s, %s, %s)
+    VALUES(%s, %s, %s, %s)
     """,
     (
         temp['timestamp'],
@@ -160,7 +160,7 @@ def insert_nibp(nibp):
         DIA,
         ERROR_MSG
     )
-    VALUES(%s, %s, %s, %s)
+    VALUES(%s, %s, %s, %s, %s)
     """,
     (
         nibp['timestamp'],

@@ -16,42 +16,42 @@ temp_vitals_buffer = VitalsBuffer()
 nibp_vitals_buffer = VitalsBuffer()
 
 class ModuleID(IntEnum):
-    ECG = 0x11
-    RESP = 0x14
-    NIBP = 0x15
-    SPO2 = 0x16
-    TEMP = 0x13
-    PATIENT = 0x23
+    ECG = 11
+    RESP = 14
+    NIBP = 15
+    SPO2 = 16
+    TEMP = 13
+    PATIENT = 23
 
 def view_buffers():
     print("Vitals Buffer: ")
-    view = ecg_vitals_buffer.view()
+    view = ecg_vitals_buffer.get()
     if view:
         print(view)
 
     print("Waveform Buffers: ")
 
-    print(ecg_waveformI_buffer.get_window())
-    print(ecg_waveformII_buffer.get_window())
-    print(ecg_waveformV_buffer.get_window())
-    print(resp_waveform_buffer.get_window())
-    print(spo2_waveform_buffer.get_window())
+    print(ecg_waveformI_buffer.get_window(10))
+    print(ecg_waveformII_buffer.get_window(10))
+    print(ecg_waveformV_buffer.get_window(10))
+    print(resp_waveform_buffer.get_window(5))
+    print(spo2_waveform_buffer.get_window(5))
 
 #fastapi should get from here
 def get_latest_ecgI_waveform():
-    return ecg_waveformI_buffer.get_latest()
+    return ecg_waveformI_buffer.get_latest(500)
 
 def get_latest_ecgII_waveform():
-    return ecg_waveformII_buffer.get_latest()
+    return ecg_waveformII_buffer.get_latest(500)
 
 def get_latest_ecgV_waveform():
-    return ecg_waveformV_buffer.get_latest()
+    return ecg_waveformV_buffer.get_latest(500)
 
 def get_latest_resp_waveform():
-    return resp_waveform_buffer.get_latest()
+    return resp_waveform_buffer.get_latest(500)
 
 def get_latest_spo2_waveform():
-    return spo2_waveform_buffer.get_latest()
+    return spo2_waveform_buffer.get_latest(500)
 
 def get_ecg_vitals():
     return ecg_vitals_buffer.get()

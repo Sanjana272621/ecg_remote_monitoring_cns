@@ -43,7 +43,7 @@ for message in get_packet():
     payload = asdict(message)
     payload["timestamp"] = str(datetime.now())
 
-    (rc, mid) = client.publish("temptest/temperature", json.dumps(payload), qos = 1)
+    (rc, mid) = client.publish("temptest/temperature", json.dumps(payload), qos = 0)
 
         #client.publish("temptest/temperature", "END OF STREAMING", qos =1)
 

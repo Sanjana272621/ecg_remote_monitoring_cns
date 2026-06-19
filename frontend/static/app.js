@@ -2,7 +2,6 @@
 async function fetchVitals() {
 
     try {
-
         const [
             ecgResponse,
             respResponse,
@@ -71,7 +70,11 @@ document.addEventListener("DOMContentLoaded", () => {
             `${protocol}//${window.location.host}/waveform`
         );
 
-    const line = new TimeSeries();
+    const ecgILine = new TimeSeries();
+    const ecgIILine = new TimeSeries();
+    const ecgVLine = new TimeSeries();
+    const respLine = new TimeSeries();
+    const spo2Line = new TimeSeries();
 
     const chart = new SmoothieChart({
         millisPerPixel: 16,
@@ -87,97 +90,82 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    const ecgCanvas =
-        document.getElementById("ecgCanvas");
+    //helper to create all 5 charts
+    function createChart(canvasId, line, opts = {}) {
+        const chart = new SmoothieChart({
+            millisPerPixel: opts.millisPerPixel ?? 16,
+            interpolation: "linear",
+            minValue: opts.minValue ?? -1000,
+            maxValue: opts.maxValue ?? 1000,
 
-    ecgCanvas.width =
-        ecgCanvas.offsetWidth ||
-        ecgCanvas.parentElement.clientWidth;
+            grid: {
+                strokeStyle: "rgba(0,255,0,0.1)",
+                fillStyle: "#000000",
+                verticalSections: 4
+            }
+        });
 
-    ecgCanvas.height =
-        ecgCanvas.offsetHeight ||
-        148;
+        chart.addTimeSeries(line, {
+            strokeStyle: "#00ff66",
+            lineWidth: 1
+        });
 
-    chart.addTimeSeries(line, {
-        strokeStyle: "#00ff66",
-        lineWidth: 1,
-        fillStyle: "rgba(0,0,0,0)"
-    });
+        chart.streamTo(
+            document.getElementById(canvasId),
+            50
+        );
 
-    chart.streamTo(ecgCanvas, 50);
+        return chart;
+    }
 
-    let nextTimestamp = Date.now();
-    let sampleCount = 0;
+    // 5 charts
+    createChart("ecgCanvasI", ecgILine);
+    createChart("ecgCanvasII", ecgIILine);
+    createChart("ecgCanvasV", ecgVLine);
+    createChart("respCanvas", respLine, { millisPerPixel: 50, minValue: -500, maxValue: 500 });
+    createChart("spo2Canvas", spo2Line, { millisPerPixel: 50, minValue: -500, maxValue: 500 });
+
+    function appendWaveform(line, samples, key) {
+        const n = samples.length;
+        if (n === 0) return;
+
+        const now = Date.now();
+        const elapsed = now - lastBatchTime[key];
+        const interval = elapsed / n;
+
+        let t = lastBatchTime[key];
+        samples.forEach(value => {
+            const num = Number(value);
+            if (!Number.isNaN(num)) {
+                t += interval;
+                line.append(t, num);
+            }
+        });
+
+        lastBatchTime[key] = now;
+    }
+
+    let lastBatchTime = {
+        ecgI: Date.now(),
+        ecgII: Date.now(),
+        ecgV: Date.now(),
+        resp: Date.now(),
+        spo2: Date.now()
+    };
 
     socket.onmessage = (event) => {
-
         try {
+            const data = JSON.parse(event.data);
 
-            const samples =
-                JSON.parse(event.data);
-
-            if (!Array.isArray(samples)) {
-                console.warn(
-                    "[ECG] Expected array, got:",
-                    typeof samples
-                );
-                return;
-            }
-
-            if (samples.length === 0) {
-                return;
-            }
-
-            const sampleInterval = 24;
-
-            samples.forEach((value) => {
-
-                const num = Number(value);
-
-                if (!Number.isNaN(num)) {
-
-                    line.append(
-                        nextTimestamp,
-                        num
-                    );
-
-                    nextTimestamp += sampleInterval;
-                    sampleCount++;
-                }
-            });
-
-            if (sampleCount % 500 === 0) {
-                console.log(
-                    `[ECG] Appended ${sampleCount} samples`
-                );
-            }
+            appendWaveform(ecgILine, data.ecgI || [], "ecgI");
+            appendWaveform(ecgIILine, data.ecgII || [], "ecgII");
+            appendWaveform(ecgVLine, data.ecgV || [], "ecgV");
+            appendWaveform(respLine, data.resp || [], "resp");
+            appendWaveform(spo2Line, data.spo2 || [], "spo2");
 
         } catch (err) {
-
-            console.error(
-                "[ECG Parse Error]",
-                err
-            );
+            console.error("[Waveform Parse Error]", err);
         }
-    };
-
-    socket.onopen = () => {
-        console.log(
-            "[ECG] WebSocket connected"
-        );
-    };
-
-    socket.onclose = () => {
-        console.warn(
-            "[ECG] WebSocket closed"
-        );
-    };
-
-    socket.onerror = (err) => {
-        console.error(
-            "[ECG] WebSocket error",
-            err
-        );
     };
 });
 

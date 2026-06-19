@@ -29,7 +29,7 @@
             <div class="card-unit">bpm</div>
         </div>
 
-        
+
         <div class="card card--spo2">
             <div class="card-label">SpO₂</div>
             <p class="card-value" id="spo2_val">--</p>
@@ -82,11 +82,51 @@
 
     <div class="chart-section">
         <div class="chart-header">
-            <span class="chart-title">ECG</span>
+            <span class="chart-title">ECG Wave I</span>
             
         </div>
         <div class="chart-container">
-            <canvas id="ecgCanvas" width="800" height="200"></canvas>
+            <canvas id="ecgCanvasI" width="800" height="200"></canvas>
+        </div>
+    </div>
+
+    <div class="chart-section">
+        <div class="chart-header">
+            <span class="chart-title">ECG Wave II</span>
+            
+        </div>
+        <div class="chart-container">
+            <canvas id="ecgCanvasII" width="800" height="200"></canvas>
+        </div>
+    </div>
+
+    <div class="chart-section">
+        <div class="chart-header">
+            <span class="chart-title">ECG Wave V</span>
+            
+        </div>
+        <div class="chart-container">
+            <canvas id="ecgCanvasV" width="800" height="200"></canvas>
+        </div>
+    </div>
+
+    <div class="chart-section">
+        <div class="chart-header">
+            <span class="chart-title">Respiration</span>
+            
+        </div>
+        <div class="chart-container">
+            <canvas id="respCanvas" width="800" height="200"></canvas>
+        </div>
+    </div>
+
+    <div class="chart-section">
+        <div class="chart-header">
+            <span class="chart-title">SPO2</span>
+            
+        </div>
+        <div class="chart-container">
+            <canvas id="spo2Canvas" width="800" height="200"></canvas>
         </div>
     </div>
 

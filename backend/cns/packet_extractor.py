@@ -45,7 +45,8 @@ def packet_extractor(client_socket, buffer):
 
                     #route to each parser
                     module_id = bin_packet[3]
-                    print("MODULE ID: ", module_id, type(module_id))
+                    with open("module_log.txt", "a") as file:
+                        file.write(str(module_id) + "\n")
                     with open("cns_capture.txt", "a") as file:
                         match module_id:
                             case ModuleID.ECG:
@@ -72,13 +73,10 @@ def packet_extractor(client_socket, buffer):
                                 print("PATIENT DATA")
                                 file.write("THIS IS PATIENT DATA!")
                                 file.write(str(bin_packet.hex()))
-
-                    with open("module_log.txt", "a") as f:
-                        f.write(f"{module_id}\n")
-                    print("Opening log file!")
+                    
                     with open(LOG_FILE, "ab") as file:
                         #file.write("NEW MESSAGE! LENGTH = " + str(len(data)) + "\n")
-                        if module_id == ModuleID.PATIENT:
+                        if module_id == ModuleID.SPO2:
                             file.write(bin_packet) 
                             file.write(b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00')
                         
