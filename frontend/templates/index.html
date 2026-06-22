@@ -78,55 +78,81 @@
             <div class="card-unit">°C</div>
         </div>
 
-    </div>
+        <div class="card">
+            <div class="card-label">ARR TYPE</div>
+            <p class="card-value" id="arr_type">--</p>
+        </div>
 
-    <div class="chart-section">
-        <div class="chart-header">
-            <span class="chart-title">ECG Wave I</span>
-            
+        <div class="card">
+            <div class="card-label">ECG LEAD</div>
+            <p class="card-value" id="ecg_lead_status">--</p>
         </div>
-        <div class="chart-container">
-            <canvas id="ecgCanvasI" width="800" height="200"></canvas>
-        </div>
-    </div>
 
-    <div class="chart-section">
-        <div class="chart-header">
-            <span class="chart-title">ECG Wave II</span>
-            
+        <div class="card">
+            <div class="card-label">SPO2 ERR</div>
+            <p class="card-value" id="spo2_error">--</p>
         </div>
-        <div class="chart-container">
-            <canvas id="ecgCanvasII" width="800" height="200"></canvas>
-        </div>
-    </div>
 
-    <div class="chart-section">
-        <div class="chart-header">
-            <span class="chart-title">ECG Wave V</span>
-            
+        <div class="card">
+            <div class="card-label">TEMP LEAD</div>
+            <p class="card-value" id="temp_lead_status">--</p>
         </div>
-        <div class="chart-container">
-            <canvas id="ecgCanvasV" width="800" height="200"></canvas>
+
+        <div class="card">
+            <div class="card-label">NIBP ERR</div>
+            <p class="card-value" id="nibp_error">--</p>
         </div>
     </div>
 
-    <div class="chart-section">
-        <div class="chart-header">
-            <span class="chart-title">Respiration</span>
-            
+    <div class = "charts-grid">
+        <div class="chart-section">
+            <div class="chart-header">
+                <span class="chart-title">ECG Wave I</span>
+                
+            </div>
+            <div class="chart-container">
+                <canvas id="ecgCanvasI"></canvas>
+            </div>
         </div>
-        <div class="chart-container">
-            <canvas id="respCanvas" width="800" height="200"></canvas>
-        </div>
-    </div>
 
-    <div class="chart-section">
-        <div class="chart-header">
-            <span class="chart-title">SPO2</span>
-            
+        <div class="chart-section">
+            <div class="chart-header">
+                <span class="chart-title">ECG Wave II</span>
+                
+            </div>
+            <div class="chart-container">
+                <canvas id="ecgCanvasII"></canvas>
+            </div>
         </div>
-        <div class="chart-container">
-            <canvas id="spo2Canvas" width="800" height="200"></canvas>
+
+        <div class="chart-section">
+            <div class="chart-header">
+                <span class="chart-title">ECG Wave V</span>
+                
+            </div>
+            <div class="chart-container">
+                <canvas id="ecgCanvasV"></canvas>
+            </div>
+        </div>
+
+        <div class="chart-section">
+            <div class="chart-header">
+                <span class="chart-title">Respiration</span>
+                
+            </div>
+            <div class="chart-container">
+                <canvas id="respCanvas"></canvas>
+            </div>
+        </div>
+
+        <div class="chart-section">
+            <div class="chart-header">
+                <span class="chart-title">SPO2</span>
+                
+            </div>
+            <div class="chart-container">
+                <canvas id="spo2Canvas"></canvas>
+            </div>
         </div>
     </div>
 

@@ -112,8 +112,8 @@ def realtime_storage(data):
         case ModuleID.TEMP:
             temp_vitals_buffer.update({
                 "lead_status": data['lead_status'],
-                "temp1": data['temp1'],
-                "temp2": data['temp2'],
+                "temp1": str(data['temp1'])[0:4],
+                "temp2": str(data['temp2'])[0:4],
                 "timestamp": timestamp
             })
 

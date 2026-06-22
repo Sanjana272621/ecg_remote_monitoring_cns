@@ -49,6 +49,21 @@ async function fetchVitals() {
         if (nibp.map !== undefined)
             document.getElementById("map").innerText = nibp.map;
 
+        if (ecg.arr_type !== undefined)
+            document.getElementById("arr_type").innerText = ecg.arr_type;
+
+        if (ecg.lead_status !== undefined)
+            document.getElementById("ecg_lead_status").innerText = ecg.lead_status;
+
+        if (spo2.error_msg !== undefined)
+            document.getElementById("spo2_error").innerText = spo2.error_msg;
+
+        if (temp.lead_status !== undefined)
+            document.getElementById("temp_lead_status").innerText = temp.lead_status;
+
+        if (nibp.error_msg !== undefined)
+            document.getElementById("nibp_error").innerText = nibp.error_msg;
+
     } catch (err) {
         console.error("Vitals fetch failed:", err);
     }
@@ -92,7 +107,19 @@ document.addEventListener("DOMContentLoaded", () => {
 
     //helper to create all 5 charts
     function createChart(canvasId, line, opts = {}) {
+        const canvas = document.getElementById(canvasId);
+        if (!canvas) {
+            console.error(`Canvas not found: ${canvasId}`);
+            return null;
+        }
+
+        // SmoothieChart needs pixel dimensions on the canvas bitmap (not CSS alone).
+        const container = canvas.parentElement;
+        canvas.width = container.clientWidth;
+        canvas.height = container.clientHeight;
+
         const chart = new SmoothieChart({
+            responsive: true,
             millisPerPixel: opts.millisPerPixel ?? 18,
             interpolation: "linear",
             minValue: opts.minValue ?? -1000,
@@ -110,10 +137,7 @@ document.addEventListener("DOMContentLoaded", () => {
             lineWidth: 1
         });
 
-        chart.streamTo(
-            document.getElementById(canvasId),
-            0 //test with 0 delay
-        );
+        chart.streamTo(canvas, 0);
 
         return chart;
     }
