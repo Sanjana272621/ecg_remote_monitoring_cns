@@ -40,7 +40,7 @@ class CircularBuffer:
 
     def get_window(self, sample_count):
         if self.count == 0:
-            return []
+            return [0]
 
         latest = []
         temp = self.read 
@@ -50,5 +50,8 @@ class CircularBuffer:
             latest.append(self.data[temp])
 
         return latest
+    
+    def get_count(self):
+        return self.count
 
         

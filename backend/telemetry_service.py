@@ -2,12 +2,15 @@ from circular_buffer import CircularBuffer
 from vitals_buffer import VitalsBuffer 
 import db.insertions
 from enum import IntEnum
+import logging 
 
-ecg_waveformI_buffer = CircularBuffer(100000)
-ecg_waveformII_buffer = CircularBuffer(100000)
-ecg_waveformV_buffer = CircularBuffer(100000)
-resp_waveform_buffer = CircularBuffer(10000)
-spo2_waveform_buffer = CircularBuffer(10000)
+logging.basicConfig(level=logging.INFO)
+
+ecg_waveformI_buffer = CircularBuffer(5000)
+ecg_waveformII_buffer = CircularBuffer(5000)
+ecg_waveformV_buffer = CircularBuffer(5000)
+resp_waveform_buffer = CircularBuffer(500)
+spo2_waveform_buffer = CircularBuffer(500)
 
 ecg_vitals_buffer = VitalsBuffer()
 resp_vitals_buffer = VitalsBuffer()
@@ -39,19 +42,21 @@ def view_buffers():
 
 #fastapi should get from here
 def get_latest_ecgI_waveform():
-    return ecg_waveformI_buffer.get_latest(500)
+    data = ecg_waveformI_buffer.get_latest(60)
 
+    return data
+    
 def get_latest_ecgII_waveform():
-    return ecg_waveformII_buffer.get_latest(500)
+    return ecg_waveformII_buffer.get_latest(60)
 
 def get_latest_ecgV_waveform():
-    return ecg_waveformV_buffer.get_latest(500)
+    return ecg_waveformV_buffer.get_latest(60)
 
 def get_latest_resp_waveform():
-    return resp_waveform_buffer.get_latest(500)
+    return resp_waveform_buffer.get_latest(25)
 
 def get_latest_spo2_waveform():
-    return spo2_waveform_buffer.get_latest(500)
+    return spo2_waveform_buffer.get_latest(15)
 
 def get_ecg_vitals():
     return ecg_vitals_buffer.get()
@@ -122,6 +127,7 @@ def realtime_storage(data):
             })
             
 def persistent_storage(data):
+    #for data in data_list:
     module_id = data['module_id']
 
     match module_id:

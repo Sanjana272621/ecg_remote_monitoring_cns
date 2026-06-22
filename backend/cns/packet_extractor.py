@@ -11,7 +11,6 @@ class ModuleID(IntEnum):
     TEMP = 0x13
     PATIENT = 0x23
 
-LOG_FILE = 'cns_capture.bin'
 start_byte = b'\x55'
 end_byte = b'\xaa'
 
@@ -45,50 +44,26 @@ def packet_extractor(client_socket, buffer):
 
                     #route to each parser
                     module_id = bin_packet[3]
-                    with open("module_log.txt", "a") as file:
-                        file.write(str(module_id) + "\n")
-                    with open("cns_capture.txt", "a") as file:
-                        match module_id:
-                            case ModuleID.ECG:
-                                ecg_data = ecg_parser(bin_packet, dec_packet_length)
-                                file.write(f"{ecg_data}\n")
-                                yield(ecg_data)
-                            case ModuleID.RESP:
-                                resp_data = resp_parser(bin_packet, dec_packet_length)
-                                file.write(f"{resp_data}\n")
-                                yield(resp_data)
-                            case ModuleID.NIBP:
-                                nibp_data = nibp_parser(bin_packet, dec_packet_length)
-                                file.write(f"{nibp_data}\n")
-                                yield(nibp_data)
-                            case ModuleID.SPO2:
-                                spo2_data = spo2_parser(bin_packet, dec_packet_length)
-                                file.write(f"{spo2_data}\n")
-                                yield(spo2_data)
-                            case ModuleID.TEMP:
-                                temp_data = temp_parser(bin_packet, dec_packet_length)
-                                file.write(f"{temp_data}\n")                     
-                                yield(temp_data)
-                            case ModuleID.PATIENT:
-                                print("PATIENT DATA")
-                                file.write("THIS IS PATIENT DATA!")
-                                file.write(str(bin_packet.hex()))
                     
-                    with open(LOG_FILE, "ab") as file:
-                        #file.write("NEW MESSAGE! LENGTH = " + str(len(data)) + "\n")
-                        if module_id == ModuleID.SPO2:
-                            file.write(bin_packet) 
-                            file.write(b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00')
-                        
-
-                    with open("cns_verify.txt", "a") as file:
-                        hex_data = str(bin_packet.hex())
-
-                        for i in range(0, len(hex_data), 2):
-                            file.write(hex_data[i: i+2])
-                            file.write(" ")
-
-                        file.write("\n\n\n")
+                    match module_id:
+                        case ModuleID.ECG:
+                            ecg_data = ecg_parser(bin_packet, dec_packet_length)
+                            yield(ecg_data)
+                        case ModuleID.RESP:
+                            resp_data = resp_parser(bin_packet, dec_packet_length)
+                            yield(resp_data)
+                        case ModuleID.NIBP:
+                            nibp_data = nibp_parser(bin_packet, dec_packet_length)
+                            yield(nibp_data)
+                        case ModuleID.SPO2:
+                            spo2_data = spo2_parser(bin_packet, dec_packet_length)
+                            yield(spo2_data)
+                        case ModuleID.TEMP:
+                            temp_data = temp_parser(bin_packet, dec_packet_length)
+                            yield(temp_data)
+                        case ModuleID.PATIENT:
+                            print("PATIENT DATA")
+                    
                     del buffer[:start_ptr + dec_packet_length] #modify buffer in place
                     start_ptr = 0
 
