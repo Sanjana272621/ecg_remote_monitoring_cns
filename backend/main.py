@@ -7,6 +7,7 @@ from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 import telemetry_service as telemetry_service 
+from history_router import router as history_router
 from fastapi import Request
 import asyncio
 import os
@@ -81,6 +82,15 @@ async def home(request: Request):
         context={"request": request}
     )
 
+
+@app.get("/history", response_class=HTMLResponse)
+async def history_page(request: Request):
+    return templates.TemplateResponse(
+        request=request,
+        name="history.html",
+        context={"request": request}
+    )
+
 @app.get("/ecg_vitals")
 def get_ecg_vitals_route():
     return telemetry_service.get_ecg_vitals()
@@ -121,3 +131,5 @@ async def waveform_socket(ws: WebSocket):
             "spo2": telemetry_service.get_latest_spo2_waveform()
         })
         await asyncio.sleep(0.02)
+
+app.include_router(history_router, prefix="/api")
