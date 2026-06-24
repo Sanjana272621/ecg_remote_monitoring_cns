@@ -14,6 +14,7 @@ import os
 import json
 import queue
 import threading
+import db.queries
 
 load_dotenv()
 
@@ -46,6 +47,7 @@ def on_message(client, userdata, msg):
         count = 0
     '''
     #telemetry_service.view_buffers()
+    #db.queries.select_random_ecg_waveforms()
 
 def on_connect(client, userdata, flags, rc):
     print("CONNAK recieved with code: " + str(rc)) 

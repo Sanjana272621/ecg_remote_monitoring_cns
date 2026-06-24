@@ -1,347 +1,49 @@
+<!-- history.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Waveform History</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ECG History</title>
+  <link rel="stylesheet" href="/static/css/style.css" />
+  <style>
+    body { font-family: sans-serif; background: #111; color: #eee; margin: 0; padding: 16px; }
+    h2   { margin: 0 0 12px; font-size: 1rem; color: #aaa; }
 
-<!-- uPlot: fast, lightweight time-series chart -->
-<link rel="stylesheet" href="/static/uPlot.min.css">
-<script src="/static/uPlot.iife.min.js"></script>
+    .graph-block { margin-bottom: 24px; }
+    .graph-block label { display: block; font-size: 0.75rem; color: #888; margin-bottom: 4px; }
+    canvas { display: block; width: 100%; height: 120px; background: #1a1a1a; border-radius: 6px; }
 
-<style>
-  
-  :root {
-    --bg:         #0a0f0a;
-    --surface:    #111811;
-    --border:     #1e2e1e;
-    --phosphor:   #00e664;
-    --phosphor-d: #00994a;
-    --resp-color: #00c8ff;
-    --spo2-color: #ff9900;
-    --text:       #c8d8c8;
-    --text-dim:   #607060;
-    --danger:     #ff4444;
-    --font-mono:  'JetBrains Mono', 'Fira Mono', 'Courier New', monospace;
-    --font-ui:    'Inter', 'Segoe UI', system-ui, sans-serif;
-    --header-h:   56px;
-    --rail-h:     44px;   /* timeline scrubber height */
-  }
+    .controls {
+      display: flex; align-items: center; gap: 12px; margin-bottom: 20px; flex-wrap: wrap;
+    }
+    .controls button {
+      padding: 6px 16px; background: #333; color: #eee; border: 1px solid #555;
+      border-radius: 4px; cursor: pointer; font-size: 0.85rem;
+    }
+    .controls button:hover { background: #444; }
+    .controls button:disabled { opacity: 0.35; cursor: default; }
 
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: var(--font-ui);
-    font-size: 13px;
-    height: 100dvh;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-  }
-
-  /* ── Header ──────────────────────────────────────────────────── */
-  header {
-    height: var(--header-h);
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    padding: 0 20px;
-    border-bottom: 1px solid var(--border);
-    flex-shrink: 0;
-  }
-
-  header h1 {
-    font-family: var(--font-mono);
-    font-size: 14px;
-    letter-spacing: 0.12em;
-    color: var(--phosphor);
-    text-transform: uppercase;
-    flex-shrink: 0;
-  }
-
-  .header-controls {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    flex: 1;
-  }
-
-  .datetime-pair {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-family: var(--font-mono);
-    font-size: 12px;
-  }
-
-  .datetime-pair label { color: var(--text-dim); }
-
-  input[type="datetime-local"] {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    color: var(--text);
-    font-family: var(--font-mono);
-    font-size: 12px;
-    padding: 5px 8px;
-    outline: none;
-    cursor: pointer;
-  }
-  input[type="datetime-local"]:focus { border-color: var(--phosphor-d); }
-
-  .sep { color: var(--text-dim); padding: 0 2px; }
-
-  button {
-    background: var(--phosphor-d);
-    border: none;
-    border-radius: 4px;
-    color: #000;
-    cursor: pointer;
-    font-family: var(--font-mono);
-    font-size: 12px;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    padding: 6px 16px;
-    text-transform: uppercase;
-    transition: background 0.15s;
-  }
-  button:hover  { background: var(--phosphor); }
-  button:active { background: var(--phosphor-d); }
-  button:disabled { background: var(--border); color: var(--text-dim); cursor: default; }
-
-  .zoom-group {
-    display: flex;
-    gap: 4px;
-    margin-left: auto;
-  }
-  .zoom-group button {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    color: var(--text);
-    padding: 5px 10px;
-    font-size: 13px;
-  }
-  .zoom-group button:hover { border-color: var(--phosphor-d); color: var(--phosphor); background: var(--surface); }
-
-  /* ── Status bar ──────────────────────────────────────────────── */
-  #status-bar {
-    height: 26px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 0 20px;
-    border-bottom: 1px solid var(--border);
-    font-family: var(--font-mono);
-    font-size: 11px;
-    color: var(--text-dim);
-    flex-shrink: 0;
-  }
-  #status-bar .dot {
-    width: 6px; height: 6px;
-    border-radius: 50%;
-    background: var(--text-dim);
-    flex-shrink: 0;
-  }
-  #status-bar .dot.loading { background: #ffaa00; animation: blink 0.8s infinite; }
-  #status-bar .dot.ok      { background: var(--phosphor); animation: none; }
-  #status-bar .dot.error   { background: var(--danger); animation: none; }
-  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
-
-  /* ── Main chart area ─────────────────────────────────────────── */
-  #charts-container {
-    flex: 1;
-    overflow-y: auto;
-    overflow-x: hidden;
-    padding: 12px 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-
-  /* custom scrollbar */
-  #charts-container::-webkit-scrollbar { width: 6px; }
-  #charts-container::-webkit-scrollbar-track { background: var(--bg); }
-  #charts-container::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-
-  .chart-row {
-    display: flex;
-    align-items: stretch;
-    gap: 0;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    overflow: hidden;
-  }
-
-  .channel-label {
-    width: 64px;
-    flex-shrink: 0;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    gap: 4px;
-    padding: 8px 4px;
-    border-right: 1px solid var(--border);
-  }
-  .channel-label .ch-name {
-    font-family: var(--font-mono);
-    font-size: 12px;
-    font-weight: 700;
-    letter-spacing: 0.1em;
-  }
-  .channel-label .ch-unit {
-    font-size: 10px;
-    color: var(--text-dim);
-    font-family: var(--font-mono);
-  }
-
-  .ch-ecg   { color: var(--phosphor); }
-  .ch-resp  { color: var(--resp-color); }
-  .ch-spo2  { color: var(--spo2-color); }
-
-  .chart-wrap {
-    flex: 1;
-    min-width: 0;
-    height: 130px;
-    position: relative;
-  }
-  .chart-wrap .uplot { height: 100% !important; }
-
-  /* uPlot overrides — keep it dark and clinical */
-  .uplot .u-wrap  { height: 100% !important; }
-  .uplot canvas   { display: block; }
-  .uplot .u-legend { display: none; }  /* no legend, labels are in the side column */
-
-  /* ── Empty/loading overlay ───────────────────────────────────── */
-  .chart-overlay {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-family: var(--font-mono);
-    font-size: 11px;
-    color: var(--text-dim);
-    pointer-events: none;
-    background: var(--surface);
-    z-index: 2;
-    transition: opacity 0.2s;
-  }
-  .chart-overlay.hidden { opacity: 0; }
-
-  /* ── Timeline scrubber ───────────────────────────────────────── */
-  #timeline-rail {
-    height: var(--rail-h);
-    flex-shrink: 0;
-    border-top: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    padding: 0 20px;
-    gap: 12px;
-    font-family: var(--font-mono);
-    font-size: 11px;
-    color: var(--text-dim);
-  }
-  #timeline-rail input[type="range"] {
-    flex: 1;
-    accent-color: var(--phosphor-d);
-    cursor: pointer;
-    height: 4px;
-  }
-  #timeline-label { min-width: 160px; text-align: right; }
-</style>
+    #time-display { font-size: 0.8rem; color: #888; flex: 1; text-align: center; }
+    #status       { font-size: 0.75rem; color: #666; }
+  </style>
 </head>
 <body>
+  <h2>ECG / Waveform History</h2>
 
-<header>
-  <h1>&#9632; History</h1>
-  <div class="header-controls">
-    <div class="datetime-pair">
-      <label>From</label>
-      <input type="datetime-local" id="dt-from" step="1">
-    </div>
-    <span class="sep">—</span>
-    <div class="datetime-pair">
-      <label>To</label>
-      <input type="datetime-local" id="dt-to" step="1">
-    </div>
-    <button id="btn-load">Load</button>
-    <div class="zoom-group">
-      <button id="btn-zoom-in"  title="Zoom in">+</button>
-      <button id="btn-zoom-out" title="Zoom out">−</button>
-      <button id="btn-zoom-fit" title="Fit to window">Fit</button>
-    </div>
+  <div class="controls">
+    <button id="prevBtn">&#8592; Prev 10s</button>
+    <span id="time-display">—</span>
+    <button id="nextBtn">Next 10s &#8594;</button>
   </div>
-</header>
+  <span id="status">Loading…</span>
 
-<div id="status-bar">
-  <div class="dot" id="status-dot"></div>
-  <span id="status-text">Select a time range and press Load.</span>
-</div>
+  <div class="graph-block"><label>ECG I</label><canvas id="ecgI"></canvas></div>
+  <div class="graph-block"><label>ECG II</label><canvas id="ecgII"></canvas></div>
+  <div class="graph-block"><label>ECG V</label><canvas id="ecgV"></canvas></div>
+  <div class="graph-block"><label>Resp</label><canvas id="resp"></canvas></div>
+  <div class="graph-block"><label>SpO₂</label><canvas id="spo2"></canvas></div>
 
-<div id="charts-container">
-  <!-- ECG I -->
-  <div class="chart-row">
-    <div class="channel-label">
-      <span class="ch-name ch-ecg">I</span>
-      <span class="ch-unit">ECG</span>
-    </div>
-    <div class="chart-wrap" id="wrap-ecgI">
-      <div class="chart-overlay" id="overlay-ecgI">NO DATA</div>
-    </div>
-  </div>
-  <!-- ECG II -->
-  <div class="chart-row">
-    <div class="channel-label">
-      <span class="ch-name ch-ecg">II</span>
-      <span class="ch-unit">ECG</span>
-    </div>
-    <div class="chart-wrap" id="wrap-ecgII">
-      <div class="chart-overlay" id="overlay-ecgII">NO DATA</div>
-    </div>
-  </div>
-  <!-- ECG V -->
-  <div class="chart-row">
-    <div class="channel-label">
-      <span class="ch-name ch-ecg">V</span>
-      <span class="ch-unit">ECG</span>
-    </div>
-    <div class="chart-wrap" id="wrap-ecgV">
-      <div class="chart-overlay" id="overlay-ecgV">NO DATA</div>
-    </div>
-  </div>
-  <!-- RESP -->
-  <div class="chart-row">
-    <div class="channel-label">
-      <span class="ch-name ch-resp">RESP</span>
-      <span class="ch-unit">breaths</span>
-    </div>
-    <div class="chart-wrap" id="wrap-resp">
-      <div class="chart-overlay" id="overlay-resp">NO DATA</div>
-    </div>
-  </div>
-  <!-- SpO2 -->
-  <div class="chart-row">
-    <div class="channel-label">
-      <span class="ch-name ch-spo2">SpO₂</span>
-      <span class="ch-unit">%</span>
-    </div>
-    <div class="chart-wrap" id="wrap-spo2">
-      <div class="chart-overlay" id="overlay-spo2">NO DATA</div>
-    </div>
-  </div>
-</div>
-
-<div id="timeline-rail">
-  <span>◀</span>
-  <input type="range" id="timeline-slider" min="0" max="100" value="0" step="1">
-  <span>▶</span>
-  <span id="timeline-label">—</span>
-</div>
-
-<script src="/static/history.js"></script>
+  <script src="/static/history.js"></script>
 </body>
 </html>

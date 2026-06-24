@@ -6,6 +6,8 @@ from enum import IntEnum
 import logging 
 
 logging.basicConfig(level=logging.INFO)
+#1782225000000  1782225854841
+#1782226800000
 
 ecg_waveformI_buffer = CircularBuffer(5000)
 ecg_waveformII_buffer = CircularBuffer(5000)
@@ -41,6 +43,8 @@ def view_buffers():
     print(resp_waveform_buffer.get_window(5))
     print(spo2_waveform_buffer.get_window(5))
 
+def view_ecg_history():
+    output = db.queries.select_ecg_waveforms()
 #fastapi should get from here
 def get_latest_ecgI_waveform():
     data = ecg_waveformI_buffer.get_latest(60)

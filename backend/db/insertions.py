@@ -1,11 +1,15 @@
 from db.connection import get_connection 
-
+from datetime import datetime, timezone
 conn = get_connection()
 cur = conn.cursor()
 
 def insert_ecg(ecg):
     cur = conn.cursor()
 
+    recorded_at = datetime.fromtimestamp(
+        ecg["timestamp"] / 1000,
+        tz=timezone.utc
+    )
     cur.execute("""
     INSERT INTO ECG(
         RECORDED_AT,
@@ -22,7 +26,7 @@ def insert_ecg(ecg):
     RETURNING ID
     """,
     (
-        ecg['timestamp'],
+        recorded_at,
         ecg['lead_status'],
         ecg['hrv'],
         ecg['arr_type']
@@ -42,7 +46,7 @@ def insert_ecg(ecg):
     """,
     (
         ecg_id,
-        ecg['timestamp'],
+        recorded_at,
         ecg['wave1'],
         ecg['wave2'],
         ecg['waveV']
@@ -54,6 +58,11 @@ def insert_ecg(ecg):
 def insert_resp(resp):
     cur = conn.cursor()
 
+    recorded_at = datetime.fromtimestamp(
+        resp["timestamp"] / 1000,
+        tz=timezone.utc
+    )
+    
     cur.execute("""
     INSERT INTO RESP(
         RECORDED_AT,
@@ -64,7 +73,7 @@ def insert_resp(resp):
     RETURNING ID
     """,
     (
-        resp['timestamp'],
+        recorded_at,
         resp['resp_rate']
     ))
 
@@ -80,7 +89,7 @@ def insert_resp(resp):
     """,
     (
         resp_id,
-        resp['timestamp'],
+        recorded_at,
         resp['wave']
     ))
 
@@ -90,6 +99,10 @@ def insert_resp(resp):
 def insert_spo2(spo2):
     cur = conn.cursor()
 
+    recorded_at = datetime.fromtimestamp(
+        spo2["timestamp"] / 1000,
+        tz=timezone.utc
+    )
     cur.execute("""
     INSERT INTO SPO2(
         RECORDED_AT,
@@ -102,7 +115,7 @@ def insert_spo2(spo2):
     RETURNING ID
     """,
     (
-        spo2['timestamp'],
+        recorded_at,
         spo2['spo2_val'],
         spo2['pr'],
         spo2['error_msg']
@@ -120,7 +133,7 @@ def insert_spo2(spo2):
     """,
     (
         spo2_id,
-        spo2['timestamp'],
+        recorded_at,
         spo2['wave']
     ))
 
@@ -129,6 +142,11 @@ def insert_spo2(spo2):
 
 def insert_temp(temp):
     cur = conn.cursor()
+
+    recorded_at = datetime.fromtimestamp(
+        temp["timestamp"] / 1000,
+        tz=timezone.utc
+    )
 
     cur.execute("""
     INSERT INTO TEMP(
@@ -140,7 +158,7 @@ def insert_temp(temp):
     VALUES(%s, %s, %s, %s)
     """,
     (
-        temp['timestamp'],
+        recorded_at,
         temp['lead_status'],
         temp['temp1'],
         temp['temp2']
@@ -152,6 +170,10 @@ def insert_temp(temp):
 def insert_nibp(nibp):
     cur = conn.cursor()
 
+    recorded_at = datetime.fromtimestamp(
+        nibp["timestamp"] / 1000,
+        tz=timezone.utc
+    )
     cur.execute("""
     INSERT INTO NIBP(
         RECORDED_AT,
@@ -163,7 +185,7 @@ def insert_nibp(nibp):
     VALUES(%s, %s, %s, %s, %s)
     """,
     (
-        nibp['timestamp'],
+        recorded_at,
         nibp['sys'],
         nibp['map'],
         nibp['dia'],
