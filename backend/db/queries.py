@@ -13,7 +13,9 @@ def select_ecg_waveforms(start_timestamp, end_timestamp):
                 ECG_WAVEFORM.RECORDED_AT    
             """,
             (start_timestamp, end_timestamp))
-            return cur.fetchall()
+            output = cur.fetchall()
+            print("ECG WAVEFORM RETURNED!!", output)
+            return output
 
 def select_resp_waveforms(start_timestamp, end_timestamp):
     with get_connection() as conn:

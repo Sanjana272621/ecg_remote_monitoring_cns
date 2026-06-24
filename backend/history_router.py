@@ -86,6 +86,11 @@ async def _run_spo2(start_dt: datetime, end_dt: datetime):
 # See the note at the bottom about the small SQL change required.
 
 def _flatten_ecg(rows) -> dict:
+    print(f"Row count: {len(rows)}")
+    if rows:
+        row = rows[0]
+        print(f"Row[0] types: {[type(x) for x in row]}")
+        print(f"Row[0] values: {row}")
     """
     rows: list of (RECORDED_AT, WAVE1, WAVE2, WAVEV)
     Returns: { timestamps: [...], ecgI: [...], ecgII: [...], ecgV: [...] }

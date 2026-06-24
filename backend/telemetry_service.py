@@ -1,6 +1,7 @@
 from circular_buffer import CircularBuffer
 from vitals_buffer import VitalsBuffer 
 import db.insertions
+import db.queries
 from enum import IntEnum
 import logging 
 
