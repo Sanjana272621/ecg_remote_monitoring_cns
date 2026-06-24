@@ -116,6 +116,7 @@ def get_nibp_vitals_route():
 
 @app.websocket("/waveform")
 async def waveform_socket(ws: WebSocket):
+    telemetry_service.clear_buffers()
     await ws.accept()
     # discard whatever piled up before this client connected
     telemetry_service.get_latest_ecgI_waveform()

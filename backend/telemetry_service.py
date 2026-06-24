@@ -43,8 +43,13 @@ def view_buffers():
     print(resp_waveform_buffer.get_window(5))
     print(spo2_waveform_buffer.get_window(5))
 
-def view_ecg_history():
-    output = db.queries.select_ecg_waveforms()
+def clear_buffers():
+    ecg_waveformI_buffer.clear(60)
+    ecg_waveformII_buffer.clear(60)
+    ecg_waveformV_buffer.clear(60)
+    resp_waveform_buffer.clear(25)
+    spo2_waveform_buffer.clear(15)
+
 #fastapi should get from here
 def get_latest_ecgI_waveform():
     data = ecg_waveformI_buffer.get_latest(60)

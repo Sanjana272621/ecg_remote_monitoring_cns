@@ -53,5 +53,14 @@ class CircularBuffer:
     
     def get_count(self):
         return self.count
+    
+    def clear(self, size):
+        self.size = size
+        self.data = [None] * size
+
+        self.write = 0
+        self.read = -1
+
+        self.count = 0
 
         
