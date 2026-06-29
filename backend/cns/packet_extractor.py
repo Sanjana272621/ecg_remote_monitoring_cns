@@ -1,7 +1,7 @@
 #if stop byte seen AND current byte = 55, then starrt new packet
 #else 55 is a random value encountered
 from enum import IntEnum
-from .parser import ecg_parser, resp_parser, spo2_parser, nibp_parser, temp_parser
+from .parser import ecg_parser, resp_parser, spo2_parser, nibp_parser, temp_parser, patient_parser
 
 class ModuleID(IntEnum):
     ECG = 0x11
@@ -62,7 +62,8 @@ def packet_extractor(client_socket, buffer):
                             temp_data = temp_parser(bin_packet, dec_packet_length)
                             yield(temp_data)
                         case ModuleID.PATIENT:
-                            print("PATIENT DATA")
+                            patient_data = patient_parser(bin_packet, dec_packet_length)
+                            yield(patient_data)
                     
                     del buffer[:start_ptr + dec_packet_length] #modify buffer in place
                     start_ptr = 0

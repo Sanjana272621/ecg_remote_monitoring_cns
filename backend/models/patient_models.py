@@ -11,5 +11,7 @@ class Patient(BasePacket):
     module_id: int 
     module_name: str 
     gender: int 
-    first_name: int 
+    name: int 
     pid: int
+    date: str 
+    bedno: int

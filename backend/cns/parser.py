@@ -110,5 +110,13 @@ def temp_parser(bin_packet, dec_packet_length):
         temp2 = temp2_val
     ))
 
+def patient_parser(bin_packet, dec_packet_length):
+    gender = to_big_endian_int(bin_packet[8:10])
+    name = to_big_endian_int(bin_packet[10:12])
+    pid = to_big_endian_int(bin_packet[12:14])
+    date = str(to_big_endian_int(bin_packet[14:16])) + str(to_big_endian_int(bin_packet[16:18])) + str(to_big_endian_int(bin_packet[18:20]))
+    bedno = to_big_endian_int(bin_packet[20:22])
+    
+
     
 
