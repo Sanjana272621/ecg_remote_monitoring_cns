@@ -1,5 +1,5 @@
 from ..models.packet_models import Ecg, Resp, Spo2, Temp, Nibp 
-
+from ..models.patient_models import Patient
 def to_big_endian_int(data):
     if len(data) == 1:
         return int(data[0])
@@ -111,12 +111,36 @@ def temp_parser(bin_packet, dec_packet_length):
     ))
 
 def patient_parser(bin_packet, dec_packet_length):
-    gender = to_big_endian_int(bin_packet[8:10])
-    name = to_big_endian_int(bin_packet[10:12])
-    pid = to_big_endian_int(bin_packet[12:14])
-    date = str(to_big_endian_int(bin_packet[14:16])) + str(to_big_endian_int(bin_packet[16:18])) + str(to_big_endian_int(bin_packet[18:20]))
-    bedno = to_big_endian_int(bin_packet[20:22])
-    
 
-    
+    gender  = bin_packet[4]                         
 
+    name    = ''
+    for b in bin_packet[5:25]:
+        if b == 0: break
+        name += chr(b)
+
+    pid     = ''
+    for b in bin_packet[25:35]:
+        if b == 0: break
+        pid += chr(b)
+
+    # day     = bin_packet[35]                        
+    # month   = bin_packet[36]                        
+    # year    = to_big_endian_int(bin_packet[37:39])  
+
+    # date    = f"{day:02d}/{month:02d}/{year}"
+
+    bedno   = ''
+    for b in bin_packet[39:49]:
+        if b == 0: break
+        bedno += chr(b)
+
+    return Patient(
+        module_id   = 23,
+        module_name = "patient",
+        name        = name,
+        gender      = gender,
+        pid         = pid,
+        # date        = date,
+        bedno       = bedno
+    )

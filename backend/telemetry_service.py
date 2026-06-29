@@ -1,13 +1,19 @@
 from circular_buffer import CircularBuffer
 from vitals_buffer import VitalsBuffer 
 import db.insertions
-import db.queries
 from enum import IntEnum
 import logging 
+import time
+import uuid 
+import threading
+_session_lock = threading.Lock()
 
 logging.basicConfig(level=logging.INFO)
-#1782225000000  1782225854841
-#1782226800000
+
+current_patient_id = None
+session_start_time = None
+#SESSION_DURATION = 12 * 60 * 60  # 12 hours in seconds
+SESSION_DURATION = 30
 
 ecg_waveformI_buffer = CircularBuffer(5000)
 ecg_waveformII_buffer = CircularBuffer(5000)
@@ -135,10 +141,43 @@ def realtime_storage(data):
                 "error_msg": data['error_msg'],
                 "timestamp": timestamp
             })
-            
+
+
+def get_or_create_patient_id():
+    global current_patient_id, session_start_time
+    with _session_lock:
+        now = time.time()
+        # Start a new 12-hour window if none exists or window expired
+        if session_start_time is None or (now - session_start_time) >= SESSION_DURATION:
+            session_start_time = now
+            current_patient_id = uuid.uuid4()  # e.g. UUID or timestamp-based
+
+        return str(current_patient_id)
+        
 def persistent_storage(data):
-    #for data in data_list:
     module_id = data['module_id']
+
+    # Handle patient packet first, before touching pid
+    if module_id == ModuleID.PATIENT:
+        global current_patient_id
+        
+        db.insertions.insert_patient(data)
+
+        real_patient_id = str(data['pid'])  # real ID from the packet
+
+        with _session_lock:
+            if real_patient_id != current_patient_id:
+                db.insertions.rewrite_patient_id(
+                    old_id=current_patient_id,
+                    new_id=real_patient_id,
+                    since=session_start_time
+                )
+                current_patient_id = real_patient_id
+            
+        return  # nothing to insert, we're done
+
+    # Only stamp pid on telemetry packets
+    data['pid'] = get_or_create_patient_id()
 
     match module_id:
         case ModuleID.ECG:

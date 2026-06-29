@@ -14,7 +14,6 @@ import os
 import json
 import queue
 import threading
-import db.queries
 
 load_dotenv()
 

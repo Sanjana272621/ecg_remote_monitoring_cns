@@ -1,3 +1,7 @@
+import psycopg2.extras
+
+psycopg2.extras.register_uuid()
+
 from db.connection import get_connection 
 from datetime import datetime, timezone
 
@@ -63,4 +67,5 @@ def select_spo2_waveforms(start_timestamp, end_timestamp):
             """,
             (start_dt, end_dt))
             return cur.fetchall()
+        
         
