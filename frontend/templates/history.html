@@ -32,10 +32,13 @@
   <h2>ECG / Waveform History</h2>
 
   <div class="controls">
+    <label for="patientSelect" style="font-size:0.8rem; color:#888;">Patient:</label>
+    <select id="patientSelect"></select>
     <button id="prevBtn">&#8592; Prev 10s</button>
     <span id="time-display">—</span>
     <button id="nextBtn">Next 10s &#8594;</button>
   </div>
+
   <span id="status">Loading…</span>
 
   <div class="graph-block"><label>ECG I</label><canvas id="ecgI"></canvas></div>

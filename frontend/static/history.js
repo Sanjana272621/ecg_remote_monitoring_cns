@@ -1,36 +1,41 @@
 // history.js
-const CHUNK_MS = 10_000;   // 10 seconds per page
-const ECG_SAMPLE_INTERVAL_MS  = 20;   // your loop runs every 20 ms → 33 samples/row × 20 ms = 660 ms/row
+const CHUNK_MS = 10_000;
+const ECG_SAMPLE_INTERVAL_MS  = 20;
 const OTHER_SAMPLE_INTERVAL_MS = 20;
 
-// ── Cache ─────────────────────────────────────────────────────────────────────
-// key = chunkStart (ms), value = { ecg: [...], resp: [...], spo2: [...] }
-const cache = {};
-let inFlight = {};  // prevent duplicate fetches
+let currentPatientId = null;
 
-async function fetchChunk(startMs) {
-  if (cache[startMs]) return cache[startMs];
-  if (inFlight[startMs]) return inFlight[startMs];
+// ── Cache ─────────────────────────────────────────────────────────────────────
+// cache is now keyed by patientId → { startMs → chunk }
+let cache = {};
+let inFlight = {};
+
+async function fetchChunk(patientId, startMs) {
+  cache[patientId] = cache[patientId] || {};
+  inFlight[patientId] = inFlight[patientId] || {};
+
+  if (cache[patientId][startMs]) return cache[patientId][startMs];
+  if (inFlight[patientId][startMs]) return inFlight[patientId][startMs];
 
   const endMs = startMs + CHUNK_MS;
   const promise = Promise.all([
-    fetch(`/api/ecg_history?start=${startMs}&end=${endMs}`).then(r => r.json()),
-    fetch(`/api/resp_history?start=${startMs}&end=${endMs}`).then(r => r.json()),
-    fetch(`/api/spo2_history?start=${startMs}&end=${endMs}`).then(r => r.json()),
+    fetch(`/api/ecg_history?patient_id=${patientId}&start=${startMs}&end=${endMs}`).then(r => r.json()),
+    fetch(`/api/resp_history?patient_id=${patientId}&start=${startMs}&end=${endMs}`).then(r => r.json()),
+    fetch(`/api/spo2_history?patient_id=${patientId}&start=${startMs}&end=${endMs}`).then(r => r.json()),
   ]).then(([ecg, resp, spo2]) => {
     const chunk = { ecg, resp, spo2 };
-    cache[startMs] = chunk;
-    delete inFlight[startMs];
+    cache[patientId][startMs] = chunk;
+    delete inFlight[patientId][startMs];
     return chunk;
   });
 
-  inFlight[startMs] = promise;
+  inFlight[patientId][startMs] = promise;
   return promise;
 }
 
-function prefetch(startMs) {
-  fetchChunk(startMs).catch(() => {});               // next
-  fetchChunk(startMs - CHUNK_MS).catch(() => {});    // prev
+function prefetch(patientId, startMs) {
+  fetchChunk(patientId, startMs).catch(() => {});
+  fetchChunk(patientId, startMs - CHUNK_MS).catch(() => {});
 }
 
 // ── Flatten rows → sample array ───────────────────────────────────────────────
@@ -93,15 +98,17 @@ function renderWave(canvasId, samples, color = '#00e676') {
 }
 
 // ── State + navigation ────────────────────────────────────────────────────────
-let currentStart = Date.now() - CHUNK_MS;  // start 10 s ago
+let currentStart = Date.now() - CHUNK_MS;
 
 async function loadAndRender(startMs) {
+  if (!currentPatientId) return;
+
   document.getElementById('status').textContent = 'Loading…';
   document.getElementById('prevBtn').disabled = true;
   document.getElementById('nextBtn').disabled = true;
 
   try {
-    const chunk = await fetchChunk(startMs);
+    const chunk = await fetchChunk(currentPatientId, startMs);
 
     renderWave('ecgI',  flattenEcg(chunk.ecg, 'ecgI'),   '#00e676');
     renderWave('ecgII', flattenEcg(chunk.ecg, 'ecgII'),  '#40c4ff');
@@ -114,9 +121,8 @@ async function loadAndRender(startMs) {
     document.getElementById('time-display').textContent = `${from} → ${to}`;
     document.getElementById('status').textContent = '';
 
-    // Pre-fetch neighbours so the next click is instant
-    prefetch(startMs + CHUNK_MS);
-    prefetch(startMs - CHUNK_MS);
+    prefetch(currentPatientId, startMs + CHUNK_MS);
+    prefetch(currentPatientId, startMs - CHUNK_MS);
   } catch (err) {
     document.getElementById('status').textContent = 'Error loading data.';
     console.error(err);
@@ -137,5 +143,32 @@ document.getElementById('nextBtn').addEventListener('click', () => {
   loadAndRender(currentStart);
 });
 
-// Start: last 10 seconds
-loadAndRender(currentStart);
+// ── Patient dropdown ───────────────────────────────────────────────────────────
+async function loadPatients() {
+  const select = document.getElementById('patientSelect');
+  try {
+    const patients = await fetch('/api/patients').then(r => r.json());
+    select.innerHTML = patients
+      .map(p => `<option value="${p.id}">${p.name}${p.bedno ? ' (' + p.bedno + ')' : ''}</option>`)
+      .join('');
+
+    if (patients.length) {
+      currentPatientId = patients[0].id;
+      loadAndRender(currentStart);
+    } else {
+      document.getElementById('status').textContent = 'No patients found.';
+    }
+  } catch (err) {
+    document.getElementById('status').textContent = 'Error loading patients.';
+    console.error(err);
+  }
+}
+
+document.getElementById('patientSelect').addEventListener('change', (e) => {
+  currentPatientId = e.target.value;
+  currentStart = Date.now() - CHUNK_MS;  // reset window on patient switch
+  loadAndRender(currentStart);
+});
+
+// Start: load patient list, then last 10 seconds for the first patient
+loadPatients();

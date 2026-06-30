@@ -62,11 +62,7 @@ def packet_extractor(client_socket, buffer):
                             temp_data = temp_parser(bin_packet, dec_packet_length)
                             yield(temp_data)
                         case ModuleID.PATIENT:
-                            with open ("patient_bin.bin", "ab") as f1:
-                                f1.write(bin_packet)
                             patient_data = patient_parser(bin_packet, dec_packet_length)
-                            with open ("patient_txt.txt", "a") as f2:
-                                f2.write("parsed: " + str(patient_data))
                             yield(patient_data)
                     
                     del buffer[:start_ptr + dec_packet_length] #modify buffer in place
