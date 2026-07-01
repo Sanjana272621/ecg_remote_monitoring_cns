@@ -215,18 +215,44 @@ document.getElementById('nextBtn').addEventListener('click', () => {
 // Keep refreshing the visible window and advance it forward as the live edge
 // moves, so the next chunk keeps updating instead of staying stuck on an old
 // window while new data arrives.
+//
+// IMPORTANT: we only advance currentStart forward once the window we are
+// CURRENTLY showing has been confirmed `stable` (i.e. its own fetch resolved
+// after it was safely past the ingestion lag). `latestWindowStart()` is a
+// pure function of wall-clock time — it has no idea whether the window it
+// names has actually been fetched successfully yet. If we blindly assign
+// `currentStart = latestWindowStart()` on every tick, then the moment a user
+// lands exactly on the frontier window (e.g. by clicking "next" repeatedly
+// from an old page) *before* that window has finished ingesting, the very
+// next tick (10s later) will silently slide past it to the next window —
+// forever. The window that was actually blank on screen never gets revisited,
+// because nothing in the loop ever says "wait, did the thing I'm showing
+// right now actually load?"
+//
+// By gating the advance on `stable`, we instead keep retrying (forceFresh)
+// the same window until we can trust its result (empty or not), and only
+// then move the window forward. In the common case (steady live tracking)
+// this stabilizes on the very first fetch and there's no perceptible lag;
+// it only holds position in the exact edge case that used to get stuck.
 function startLiveRefresh() {
   clearInterval(liveTimer);
   liveTimer = setInterval(() => {
     if (!currentPatientId) return;
 
-    const latestStart = latestWindowStart();
-
     if (liveMode) {
-      // Auto-following the live edge: advance the window forward.
-      currentStart = latestStart;
+      const patientCache = cache[currentPatientId];
+      const entry = patientCache && patientCache[currentStart];
+      const currentWindowConfirmed = !!(entry && entry.stable);
+
+      if (currentWindowConfirmed) {
+        // The window we're showing is confirmed past the ingestion lag —
+        // safe to move on to whatever is the newest window now.
+        currentStart = latestWindowStart();
+      }
+      // else: don't touch currentStart. Stay put and let the forceFresh
+      // reload below retry this same window until it stabilizes, instead
+      // of racing ahead and abandoning it.
     }
-    // else: leave currentStart alone — don't push the user to the live page.
 
     // Always refresh whatever window is currently on screen.
     loadAndRender(currentStart, /* forceFresh */ true);
