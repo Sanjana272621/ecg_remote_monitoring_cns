@@ -1,10 +1,18 @@
 # history_router.py
+from datetime import timezone
+
 from fastapi import APIRouter, Query, HTTPException
 from db import queries
 
 router = APIRouter()
 
 CHUNK_DURATION_MS = 10_000  # 10 seconds per chunk
+
+
+def to_epoch_ms(dt):
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    return int(dt.timestamp() * 1000)
 
 
 @router.get("/ecg_history")
@@ -15,11 +23,9 @@ def get_ecg_history(
 ):
     try:
         rows = queries.select_ecg_waveforms(patient_id, start, end)
-        # with open("history_log.txt", "a") as file:
-        #     file.write("timestamp: " + str(rows[0][0]) + type(rows[0][0]) + "\n")
         return [
             {
-                "timestamp": row[0].timestamp() * 1000,  # → ms
+                "timestamp": to_epoch_ms(row[0]),
                 "ecgI":  row[1],  # list of ~33 samples
                 "ecgII": row[2],
                 "ecgV":  row[3],
@@ -39,7 +45,7 @@ def get_resp_history(
     try:
         rows = queries.select_resp_waveforms(patient_id, start, end)
         return [
-            {"timestamp": row[0].timestamp() * 1000, "waveform": row[1]}
+            {"timestamp": to_epoch_ms(row[0]), "waveform": row[1]}
             for row in rows
         ]
     except Exception as e:
@@ -55,7 +61,7 @@ def get_spo2_history(
     try:
         rows = queries.select_spo2_waveforms(patient_id, start, end)
         return [
-            {"timestamp": row[0].timestamp() * 1000, "waveform": row[1]}
+            {"timestamp": to_epoch_ms(row[0]), "waveform": row[1]}
             for row in rows
         ]
     except Exception as e:

@@ -1,7 +1,6 @@
 import paho.mqtt.client as mqtt 
 import paho.mqtt.publish as publish
 from backend.cns.server import get_packet
-from datetime import datetime, timezone
 import random 
 import ssl
 from dotenv import load_dotenv
@@ -32,9 +31,9 @@ client.loop_start()
 for message in get_packet(): 
     #print("MESSAGE: ", message, type(message))
     payload = asdict(message)
-    payload["timestamp"] = int(datetime.now(timezone.utc).timestamp() * 1000)
+    # payload["timestamp"] = int(datetime.now(timezone.utc).timestamp() * 1000)
 
-    (rc, mid) = client.publish("temptest/temperature", json.dumps(payload), qos = 0)
+    (rc, mid) = client.publish("temptest/temperature", json.dumps   (payload), qos = 0)
     
         #client.publish("temptest/temperature", "END OF STREAMING", qos =1)
 

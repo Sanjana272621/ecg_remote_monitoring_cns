@@ -10,7 +10,7 @@ def to_big_endian_int(data):
 
     return dec_output - 65536 if dec_output >= 32768 else dec_output
 
-def ecg_parser(bin_packet, dec_packet_length):
+def ecg_parser(bin_packet, dec_packet_length, timestamp):
 
     lead_status = to_big_endian_int(bin_packet[4:6])
     heart_rate = to_big_endian_int(bin_packet[6:8])
@@ -42,10 +42,11 @@ def ecg_parser(bin_packet, dec_packet_length):
         arr_type = arr_type,
         wave1 = wave1,
         wave2 = wave2,
-        waveV = waveV
+        waveV = waveV,
+        timestamp = timestamp
     ))
 
-def resp_parser(bin_packet, dec_packet_length):
+def resp_parser(bin_packet, dec_packet_length, timestamp):
     resp_rate = to_big_endian_int(bin_packet[4:6])
     
     waveform_length = dec_packet_length - 8
@@ -58,10 +59,11 @@ def resp_parser(bin_packet, dec_packet_length):
         module_id = 14,
         module_name = "resp",
         resp_rate = resp_rate,
-        wave = wave
+        wave = wave,
+        timestamp = timestamp
     ))
 
-def spo2_parser(bin_packet, dec_packet_length):
+def spo2_parser(bin_packet, dec_packet_length, timestamp):
     spo2_val = to_big_endian_int(bin_packet[4:5])
     pr = to_big_endian_int(bin_packet[5:7])
     wave = []
@@ -79,10 +81,11 @@ def spo2_parser(bin_packet, dec_packet_length):
         spo2_val = spo2_val,
         pr = pr,
         wave = wave,
-        error_msg = error_msg
+        error_msg = error_msg,
+        timestamp = timestamp
     ))
 
-def nibp_parser(bin_packet, dec_packet_length):
+def nibp_parser(bin_packet, dec_packet_length, timestamp):
     sys = to_big_endian_int(bin_packet[4:6])
     map = to_big_endian_int(bin_packet[6:8])
     dia = to_big_endian_int(bin_packet[8:10])
@@ -94,10 +97,11 @@ def nibp_parser(bin_packet, dec_packet_length):
         sys = sys,
         map = map,
         dia = dia,
-        error_msg = error_msg
+        error_msg = error_msg,
+        timestamp = timestamp
     ))
 
-def temp_parser(bin_packet, dec_packet_length):
+def temp_parser(bin_packet, dec_packet_length, timestamp):
     lead_status = to_big_endian_int(bin_packet[4:5])
     temp1_val = to_big_endian_int(bin_packet[5:7]) * 0.1
     temp2_val = to_big_endian_int(bin_packet[7:9]) *0.1
@@ -107,10 +111,11 @@ def temp_parser(bin_packet, dec_packet_length):
         module_name = "temp",
         lead_status = lead_status,
         temp1 = temp1_val,
-        temp2 = temp2_val
+        temp2 = temp2_val,
+        timestamp = timestamp
     ))
 
-def patient_parser(bin_packet, dec_packet_length):
+def patient_parser(bin_packet, dec_packet_length, timestamp):
 
     gender  = bin_packet[4]                         
 
@@ -142,5 +147,6 @@ def patient_parser(bin_packet, dec_packet_length):
         gender      = gender,
         pid         = pid,
         # date        = date,
-        bedno       = bedno
+        bedno       = bedno,
+        timestamp = timestamp
     )

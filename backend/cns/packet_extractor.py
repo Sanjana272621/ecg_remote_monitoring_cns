@@ -2,6 +2,7 @@
 #else 55 is a random value encountered
 from enum import IntEnum
 from .parser import ecg_parser, resp_parser, spo2_parser, nibp_parser, temp_parser, patient_parser
+from datetime import datetime, timezone
 
 class ModuleID(IntEnum):
     ECG = 0x11
@@ -42,27 +43,28 @@ def packet_extractor(client_socket, buffer):
                 while (start_ptr + dec_packet_length) <= len(buffer):
                     bin_packet = buffer[start_ptr: start_ptr+dec_packet_length]
 
+                    recieved_at_ms = int(datetime.now(timezone.utc).timestamp() * 1000)
                     #route to each parser
                     module_id = bin_packet[3]
                     
                     match module_id:
                         case ModuleID.ECG:
-                            ecg_data = ecg_parser(bin_packet, dec_packet_length)
+                            ecg_data = ecg_parser(bin_packet, dec_packet_length, recieved_at_ms)
                             yield(ecg_data)
                         case ModuleID.RESP:
-                            resp_data = resp_parser(bin_packet, dec_packet_length)
+                            resp_data = resp_parser(bin_packet, dec_packet_length, recieved_at_ms)
                             yield(resp_data)
                         case ModuleID.NIBP:
-                            nibp_data = nibp_parser(bin_packet, dec_packet_length)
+                            nibp_data = nibp_parser(bin_packet, dec_packet_length, recieved_at_ms)
                             yield(nibp_data)
                         case ModuleID.SPO2:
-                            spo2_data = spo2_parser(bin_packet, dec_packet_length)
+                            spo2_data = spo2_parser(bin_packet, dec_packet_length, recieved_at_ms)
                             yield(spo2_data)
                         case ModuleID.TEMP:
-                            temp_data = temp_parser(bin_packet, dec_packet_length)
+                            temp_data = temp_parser(bin_packet, dec_packet_length, recieved_at_ms)
                             yield(temp_data)
                         case ModuleID.PATIENT:
-                            patient_data = patient_parser(bin_packet, dec_packet_length)
+                            patient_data = patient_parser(bin_packet, dec_packet_length, recieved_at_ms)
                             yield(patient_data)
                     
                     del buffer[:start_ptr + dec_packet_length] #modify buffer in place

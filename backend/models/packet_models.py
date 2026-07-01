@@ -20,6 +20,7 @@ class Ecg(Parameter):
     wave1: List[int]
     wave2: List[int]
     waveV: List[int]
+    timestamp: int
 
 @dataclass 
 class Resp(Parameter):
@@ -27,7 +28,7 @@ class Resp(Parameter):
     module_name: str
     resp_rate: int 
     wave: List[int]
-    
+    timestamp: int
 
 @dataclass
 class Spo2(Parameter):
@@ -37,6 +38,7 @@ class Spo2(Parameter):
     pr: int
     wave: List[int]
     error_msg: int
+    timestamp: int
 
 @dataclass
 class Temp(Parameter):
@@ -45,6 +47,7 @@ class Temp(Parameter):
     lead_status: int
     temp1: float
     temp2: float
+    timestamp: int
 
 @dataclass
 class Nibp(Parameter):
@@ -54,6 +57,6 @@ class Nibp(Parameter):
     map: int
     dia: int
     error_msg: int
-
+    timestamp: int
 
 

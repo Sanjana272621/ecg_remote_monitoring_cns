@@ -16,3 +16,4 @@ class Patient(BasePacket):
     pid: int
     # date: str 
     bedno: int
+    timestamp: int

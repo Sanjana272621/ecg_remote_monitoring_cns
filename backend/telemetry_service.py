@@ -12,8 +12,8 @@ logging.basicConfig(level=logging.INFO)
 
 current_patient_id = None
 session_start_time = None
-#SESSION_DURATION = 12 * 60 * 60  # 12 hours in seconds
-SESSION_DURATION = 120
+SESSION_DURATION = 12 * 60 * 60  # 12 hours in seconds
+#SESSION_DURATION = 120
 
 ecg_waveformI_buffer = CircularBuffer(5000)
 ecg_waveformII_buffer = CircularBuffer(5000)

@@ -1,5 +1,4 @@
 import socket
-#from packet_extractor import packet_extractor
 from .packet_extractor import packet_extractor
 packet = ''
 
@@ -20,12 +19,9 @@ def get_packet(host='192.168.1.39', port=2000):
             
             buffer = bytearray()
             yield from packet_extractor(client_socket, buffer)
-            #yield from handle_client(client_socket, buffer) #yield all 
 
     except KeyboardInterrupt:
         print("\nShutting down server.")
 
     finally:
         server_socket.close()
-
-#get_packet()
